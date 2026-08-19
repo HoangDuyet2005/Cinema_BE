@@ -140,4 +140,13 @@ public ResponseEntity<ResponseBase<ArticleDto>> getDetailByTitle(@PathVariable S
     public ResponseEntity<ResponseBase<PageResponse<ArticleDto>>> getAllCateByUser(@Parameter Long userId, @ParameterObject Pageable pageable) {
         return ResponseEntity.ok(new ResponseBase<>(articleService.getAllArticlePagingInUser(userId,pageable)));
     }
+
+    @Operation(
+        summary = "Kiểm tra user đã lưu bài viết chưa",
+        description = "- Trả về true/false"
+    )
+    @GetMapping("/user/checkSaveArticle")
+    public ResponseEntity<ResponseBase<Boolean>> checkSaveArticle(@Parameter Long userId, @Parameter Long articleId) {
+        return ResponseEntity.ok(new ResponseBase<>(articleService.checkSaveArticle(userId, articleId)));
+    }
 }

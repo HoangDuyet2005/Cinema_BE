@@ -53,7 +53,15 @@ public class ModelMapperUtils {
     }
 
     public static String removeAccentsWithApacheCommons(String input) {
-        return StringUtils.stripAccents(input).replaceAll("\\s+", "-").toLowerCase();
+        if (input == null) {
+            return "";
+        }
+        String normalized = StringUtils.stripAccents(input);
+        return normalized.replaceAll("[^a-zA-Z0-9\\s-]", "")
+                .trim()
+                .replaceAll("\\s+", "-")
+                .replaceAll("-+", "-")
+                .toLowerCase();
     }
 
 }

@@ -13,6 +13,6 @@ public interface TicketRepository extends JpaRepository<Ticket, Integer> , JpaSp
     List<Ticket> findTicketsBySchedule_IdAndSeat_Id(Integer scheduleId,Integer seatId);
     Ticket findTicketByAndSchedule_IdAndSeat_Id(Integer scheduleId,Integer seatId);
     List<Ticket> findTicketsByBillId(Integer billId);
-    @Query(value = "SELECT * FROM ticket  WHERE ticket.bill_id IN (SELECT bill.id FROM cinema.bill where user_id = :userId) ORDER BY ticket.id DESC",nativeQuery = true)
+    @Query(value = "SELECT * FROM ticket  WHERE ticket.bill_id IN (SELECT bill.id FROM bill where user_id = :userId) ORDER BY ticket.id DESC",nativeQuery = true)
     List<Ticket> findTicketsByUserId(@Param("userId") Long userId);
 }

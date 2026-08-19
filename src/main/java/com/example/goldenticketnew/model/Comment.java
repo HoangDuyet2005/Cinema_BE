@@ -6,7 +6,6 @@ import lombok.*;
 import lombok.experimental.FieldNameConstants;
 import javax.persistence.*;
 
-
 @Entity
 @Setter
 @Getter
@@ -30,4 +29,13 @@ public class Comment extends UserDateAudit {
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     @JoinColumn(name = "article_id", referencedColumnName = "id")
     private Article article;
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+    public User getUser() { return user; }
+    public void setUser(User user) { this.user = user; }
+    public Article getArticle() { return article; }
+    public void setArticle(Article article) { this.article = article; }
 }

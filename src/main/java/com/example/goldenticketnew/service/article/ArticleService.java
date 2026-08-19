@@ -13,6 +13,7 @@ import com.example.goldenticketnew.repository.IArticleRepository;
 import com.example.goldenticketnew.repository.UserRepository;
 import com.example.goldenticketnew.security.UserPrincipal;
 import com.example.goldenticketnew.utils.PageUtils;
+import com.example.goldenticketnew.utils.ModelMapperUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -83,18 +84,54 @@ public class ArticleService implements IArticleService{
         return new ArticleDto(article);
     }
 
+    @Transactional
     @Override
     public ArticleDto getDetailArticle(Long articleId) {
         Article article = articleRepository.findById(articleId).orElseThrow(() -> new InternalException(ResponseCode.ARTICLE_NOT_FOUND));
+        article.setView(article.getView() + 1);
+        article = articleRepository.save(article);
         return new ArticleDto(article);
     }
 
+    @Transactional
     @Override
     public ArticleDto getArticleBySLug(String slug) {
-        Long value = Long.parseLong(slug.replaceAll("[^0-9]", ""));
-        Article article = articleRepository.findById(value).orElseThrow(() -> new InternalException(ResponseCode.ARTICLE_NOT_FOUND));
-        article.setView(article.getView()+1);
-        return new ArticleDto(articleRepository.save(article));
+        if (slug == null || slug.trim().isEmpty()) {
+            throw new InternalException(ResponseCode.ARTICLE_NOT_FOUND);
+        }
+        String cleanSlug = slug.trim();
+        Long targetId = null;
+
+        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("(?:.*-p|.*p|.*-)?(\\d+)$", java.util.regex.Pattern.CASE_INSENSITIVE).matcher(cleanSlug);
+        if (matcher.find()) {
+            try {
+                targetId = Long.parseLong(matcher.group(1));
+            } catch (Exception ignored) {}
+        }
+
+        Article article = null;
+        if (targetId != null) {
+            article = articleRepository.findById(targetId).orElse(null);
+        }
+
+        if (article == null) {
+            List<Article> all = articleRepository.findAll();
+            for (Article a : all) {
+                String candidateSlug = ModelMapperUtils.removeAccentsWithApacheCommons(a.getTitle() + "-p" + a.getId());
+                if (candidateSlug.equalsIgnoreCase(cleanSlug) || String.valueOf(a.getId()).equals(cleanSlug)) {
+                    article = a;
+                    break;
+                }
+            }
+        }
+
+        if (article == null) {
+            throw new InternalException(ResponseCode.ARTICLE_NOT_FOUND);
+        }
+
+        article.setView(article.getView() + 1);
+        article = articleRepository.save(article);
+        return new ArticleDto(article);
     }
 
     @Override
@@ -161,15 +198,29 @@ public class ArticleService implements IArticleService{
         return new ArticleReportDto(totalArticleInMonth,previousArticleMonth,percentArticle ,totalUserInMonth,previousUserMonth,percentUser) ;
     }
 
+    @Transactional
     @Override
     public List<ArticleDto> addNewArticleInuser(Long userId, Long articleId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new InternalException(ResponseCode.USER_NOT_FOUND));
         List<Article> articles = user.getSaveArticles();
         Article article = articleRepository.findById(articleId).orElseThrow(() -> new InternalException(ResponseCode.ARTICLE_NOT_FOUND));
-        articles.add(article);
+        // Toggle: if already saved, remove it; if not saved, add it
+        boolean alreadySaved = articles.stream().anyMatch(a -> a.getId().equals(article.getId()));
+        if (alreadySaved) {
+            articles.removeIf(a -> a.getId().equals(article.getId()));
+        } else {
+            articles.add(article);
+        }
         user.setSaveArticles(articles);
         userRepository.save(user);
         return articles.stream().map(ArticleDto::new).collect(Collectors.toList());
+    }
+
+    @Override
+    public Boolean checkSaveArticle(Long userId, Long articleId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new InternalException(ResponseCode.USER_NOT_FOUND));
+        List<Article> articles = user.getSaveArticles();
+        return articles.stream().anyMatch(a -> a.getId().equals(articleId));
     }
 
     @Override

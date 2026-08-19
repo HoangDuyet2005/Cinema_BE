@@ -41,4 +41,6 @@ public interface IArticleService {
 
     PageResponse<ArticleDto> getAllArticlePagingInUser(Long userId, Pageable pageable);
 
+    Boolean checkSaveArticle(Long userId, Long articleId);
 }
+
