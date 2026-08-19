@@ -1,0 +1,122 @@
+﻿USE cinema2;
+
+-- 1. FIX IMAGES FOR BRANCHES AND ROOMS
+UPDATE branch SET imgurl = 'https://s3img.vcdn.vn/123phim/2021/01/bhd-star-bitexco-16105952137769.png';
+UPDATE room SET imgurl = 'https://s3img.vcdn.vn/123phim/2021/01/bhd-star-bitexco-16105952137769.png';
+
+-- 2. GENERATE 7 DAYS OF SCHEDULES
+DROP PROCEDURE IF EXISTS generate_schedules;
+DELIMITER 
+CREATE PROCEDURE generate_schedules()
+BEGIN
+  DECLARE d INT DEFAULT 0;
+  DELETE FROM schedule;
+  WHILE d < 7 DO
+    -- Branch 1
+    INSERT INTO schedule (price, start_date, start_time, branch_id, movie_id, room_id, created_at, updated_at) VALUES
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '09:00:00', 1, 1, 1, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '14:30:00', 1, 1, 1, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '20:00:00', 1, 1, 2, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '10:00:00', 1, 2, 2, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '15:00:00', 1, 2, 2, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '21:00:00', 1, 2, 3, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '09:30:00', 1, 3, 3, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '14:00:00', 1, 3, 3, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '19:30:00', 1, 3, 4, NOW(), NOW()),
+    (65000, DATE_ADD(CURDATE(), INTERVAL d DAY), '10:15:00', 1, 4, 4, NOW(), NOW()),
+    (65000, DATE_ADD(CURDATE(), INTERVAL d DAY), '13:00:00', 1, 4, 1, NOW(), NOW()),
+    (65000, DATE_ADD(CURDATE(), INTERVAL d DAY), '16:30:00', 1, 4, 2, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '11:00:00', 1, 5, 1, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '16:00:00', 1, 5, 3, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '21:30:00', 1, 5, 4, NOW(), NOW()),
+    (75000, DATE_ADD(CURDATE(), INTERVAL d DAY), '10:30:00', 1, 6, 2, NOW(), NOW()),
+    (75000, DATE_ADD(CURDATE(), INTERVAL d DAY), '15:30:00', 1, 6, 4, NOW(), NOW()),
+    (75000, DATE_ADD(CURDATE(), INTERVAL d DAY), '19:00:00', 1, 6, 1, NOW(), NOW()),
+    (80000, DATE_ADD(CURDATE(), INTERVAL d DAY), '10:15:00', 1, 7, 1, NOW(), NOW()),
+    (80000, DATE_ADD(CURDATE(), INTERVAL d DAY), '13:05:00', 1, 7, 2, NOW(), NOW()),
+    (80000, DATE_ADD(CURDATE(), INTERVAL d DAY), '16:20:00', 1, 7, 3, NOW(), NOW()),
+    (80000, DATE_ADD(CURDATE(), INTERVAL d DAY), '19:15:00', 1, 7, 4, NOW(), NOW()),
+    (80000, DATE_ADD(CURDATE(), INTERVAL d DAY), '22:00:00', 1, 7, 1, NOW(), NOW());
+
+    -- Branch 2
+    INSERT INTO schedule (price, start_date, start_time, branch_id, movie_id, room_id, created_at, updated_at) VALUES
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '09:00:00', 2, 1, 5, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '14:00:00', 2, 1, 5, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '20:00:00', 2, 1, 6, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '10:00:00', 2, 2, 6, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '15:30:00', 2, 2, 6, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '21:00:00', 2, 2, 7, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '09:30:00', 2, 3, 7, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '14:30:00', 2, 3, 5, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '19:30:00', 2, 3, 6, NOW(), NOW()),
+    (65000, DATE_ADD(CURDATE(), INTERVAL d DAY), '10:15:00', 2, 4, 5, NOW(), NOW()),
+    (65000, DATE_ADD(CURDATE(), INTERVAL d DAY), '13:00:00', 2, 4, 6, NOW(), NOW()),
+    (65000, DATE_ADD(CURDATE(), INTERVAL d DAY), '16:00:00', 2, 4, 7, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '11:00:00', 2, 5, 7, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '17:00:00', 2, 5, 5, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '21:30:00', 2, 5, 6, NOW(), NOW()),
+    (75000, DATE_ADD(CURDATE(), INTERVAL d DAY), '10:30:00', 2, 6, 6, NOW(), NOW()),
+    (75000, DATE_ADD(CURDATE(), INTERVAL d DAY), '15:00:00', 2, 6, 7, NOW(), NOW()),
+    (75000, DATE_ADD(CURDATE(), INTERVAL d DAY), '19:00:00', 2, 6, 5, NOW(), NOW()),
+    (80000, DATE_ADD(CURDATE(), INTERVAL d DAY), '10:15:00', 2, 7, 5, NOW(), NOW()),
+    (80000, DATE_ADD(CURDATE(), INTERVAL d DAY), '13:30:00', 2, 7, 6, NOW(), NOW()),
+    (80000, DATE_ADD(CURDATE(), INTERVAL d DAY), '16:45:00', 2, 7, 7, NOW(), NOW()),
+    (80000, DATE_ADD(CURDATE(), INTERVAL d DAY), '20:00:00', 2, 7, 5, NOW(), NOW());
+
+    -- Branch 3
+    INSERT INTO schedule (price, start_date, start_time, branch_id, movie_id, room_id, created_at, updated_at) VALUES
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '09:00:00', 3, 1, 8, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '14:00:00', 3, 1, 9, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '19:30:00', 3, 1, 10, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '10:00:00', 3, 2, 9, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '15:00:00', 3, 2, 10, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '20:30:00', 3, 2, 11, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '09:30:00', 3, 3, 10, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '14:30:00', 3, 3, 11, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '19:00:00', 3, 3, 8, NOW(), NOW()),
+    (65000, DATE_ADD(CURDATE(), INTERVAL d DAY), '10:15:00', 3, 4, 11, NOW(), NOW()),
+    (65000, DATE_ADD(CURDATE(), INTERVAL d DAY), '13:30:00', 3, 4, 8, NOW(), NOW()),
+    (65000, DATE_ADD(CURDATE(), INTERVAL d DAY), '16:00:00', 3, 4, 9, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '11:00:00', 3, 5, 8, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '16:30:00', 3, 5, 9, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '21:00:00', 3, 5, 10, NOW(), NOW()),
+    (75000, DATE_ADD(CURDATE(), INTERVAL d DAY), '10:30:00', 3, 6, 9, NOW(), NOW()),
+    (75000, DATE_ADD(CURDATE(), INTERVAL d DAY), '15:30:00', 3, 6, 10, NOW(), NOW()),
+    (75000, DATE_ADD(CURDATE(), INTERVAL d DAY), '20:00:00', 3, 6, 11, NOW(), NOW()),
+    (80000, DATE_ADD(CURDATE(), INTERVAL d DAY), '10:15:00', 3, 7, 8, NOW(), NOW()),
+    (80000, DATE_ADD(CURDATE(), INTERVAL d DAY), '13:30:00', 3, 7, 9, NOW(), NOW()),
+    (80000, DATE_ADD(CURDATE(), INTERVAL d DAY), '17:00:00', 3, 7, 10, NOW(), NOW()),
+    (80000, DATE_ADD(CURDATE(), INTERVAL d DAY), '20:15:00', 3, 7, 11, NOW(), NOW());
+
+    -- Branch 4
+    INSERT INTO schedule (price, start_date, start_time, branch_id, movie_id, room_id, created_at, updated_at) VALUES
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '09:00:00', 4, 1, 12, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '14:30:00', 4, 1, 13, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '19:00:00', 4, 1, 14, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '10:00:00', 4, 2, 13, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '15:30:00', 4, 2, 14, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '20:30:00', 4, 2, 15, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '09:30:00', 4, 3, 14, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '14:00:00', 4, 3, 15, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '19:30:00', 4, 3, 12, NOW(), NOW()),
+    (65000, DATE_ADD(CURDATE(), INTERVAL d DAY), '10:15:00', 4, 4, 15, NOW(), NOW()),
+    (65000, DATE_ADD(CURDATE(), INTERVAL d DAY), '13:00:00', 4, 4, 12, NOW(), NOW()),
+    (65000, DATE_ADD(CURDATE(), INTERVAL d DAY), '16:30:00', 4, 4, 13, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '11:00:00', 4, 5, 12, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '16:00:00', 4, 5, 13, NOW(), NOW()),
+    (70000, DATE_ADD(CURDATE(), INTERVAL d DAY), '21:30:00', 4, 5, 14, NOW(), NOW()),
+    (75000, DATE_ADD(CURDATE(), INTERVAL d DAY), '10:30:00', 4, 6, 13, NOW(), NOW()),
+    (75000, DATE_ADD(CURDATE(), INTERVAL d DAY), '15:00:00', 4, 6, 14, NOW(), NOW()),
+    (75000, DATE_ADD(CURDATE(), INTERVAL d DAY), '19:30:00', 4, 6, 15, NOW(), NOW()),
+    (80000, DATE_ADD(CURDATE(), INTERVAL d DAY), '10:15:00', 4, 7, 12, NOW(), NOW()),
+    (80000, DATE_ADD(CURDATE(), INTERVAL d DAY), '13:30:00', 4, 7, 13, NOW(), NOW()),
+    (80000, DATE_ADD(CURDATE(), INTERVAL d DAY), '16:45:00', 4, 7, 14, NOW(), NOW()),
+    (80000, DATE_ADD(CURDATE(), INTERVAL d DAY), '20:00:00', 4, 7, 15, NOW(), NOW());
+
+    SET d = d + 1;
+  END WHILE;
+END
+DELIMITER ;
+CALL generate_schedules();
+
+SELECT 'COUNT:' AS label, COUNT(*) FROM schedule;

@@ -1,0 +1,14 @@
+USE cinema2;
+
+INSERT INTO article (created_at, updated_at, created_by, brief, description, keyword, main_image, status, thumbnail, title, type, view) VALUES
+(NOW(), NOW(), 'Hoang The Duyet', 'Tham gia ngay sự kiện mùa hè sôi động với vô vàn phần quà hấp dẫn như iPhone 17 Pro, Macbook Neo, Tai nghe xịn sò từ WORLD CINEMA.', '<p>Mùa hè này, hãy cùng WORLD CINEMA bùng nổ với sự kiện lớn nhất trong năm...</p>', 'khuyen mai, mua he', 'https://images.unsplash.com/photo-1595180633649-db37bbcaacbb?q=80&w=800', 1, 'https://images.unsplash.com/photo-1595180633649-db37bbcaacbb?q=80&w=800', 'CINE CHÀO SUMMER - CHƠI LÀ TRÚNG, QUÀ CỰC KHỦNG', 1, 3500),
+
+(NOW(), NOW(), 'Hoang The Duyet', 'Combo bắp cốm đặc biệt đang chờ đón bạn. Số lượng cực kỳ có hạn, nhanh tay thưởng thức ngay hương vị tuổi thơ!', '<p>Thưởng thức bắp cốm nóng hổi giòn rụm trong lúc xem phim...</p>', 'bap com, khuyen mai bap nuoc', 'https://images.unsplash.com/photo-1572196284554-4e321b0e7e0b?q=80&w=800', 1, 'https://images.unsplash.com/photo-1572196284554-4e321b0e7e0b?q=80&w=800', 'BẮP CỐM SỐ LƯỢNG CÓ HẠN - MUA NGAY KẺO LỠ', 1, 1200),
+
+(NOW(), NOW(), 'Hoang The Duyet', 'Thanh toán dễ dàng, nhận ngay xu thưởng khi đặt vé qua ZaloPay tại WORLD CINEMA. Trải nghiệm giải trí cực đã!', '<p>Chương trình tích điểm hoàn xu lên đến 20% khi thanh toán bằng ví ZaloPay...</p>', 'zalopay, khuyen mai zalopay', 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?q=80&w=800', 1, 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?q=80&w=800', 'ĐẶT VÉ TÍCH XU TRÊN ZALOPAY', 1, 4200),
+
+(NOW(), NOW(), 'Hoang The Duyet', 'Hành trình trải nghiệm điện ảnh vượt chuẩn cùng phòng chiếu VIP và ghế ngồi hạng thương gia.', '<p>Nâng tầm trải nghiệm điện ảnh với hệ thống âm thanh vòm...</p>', 'vip lounge, trai nghiem dien anh', 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?q=80&w=800', 1, 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?q=80&w=800', 'HÀNH TRÌNH VƯỢT TẦM TRẢI NGHIỆM ĐIỆN ẢNH', 1, 980),
+
+(NOW(), NOW(), 'Hoang The Duyet', 'Ưu đãi cực sốc giảm giá lên tới 30% cho tất cả các giao dịch thông qua cổng thanh toán Payoo.', '<p>Nhanh tay đặt vé ngay hôm nay để nhận được ưu đãi giảm sâu...</p>', 'payoo, khuyen mai thanh toan', 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?q=80&w=800', 1, 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?q=80&w=800', 'ƯU ĐÃI 30% KHI THANH TOÁN QUA PAYOO', 1, 2300),
+
+(NOW(), NOW(), 'Hoang The Duyet', 'Chỉ từ 199K, trải nghiệm ngay dịch vụ đẳng cấp 5 sao tại phòng VIP Lounge dành cho thành viên G-Star.', '<p>Phòng chờ VIP mang lại không gian thoải mái sang trọng...</p>', 'vip lounge, khuyen mai vip', 'https://images.unsplash.com/photo-1478720568477-152d9b164e26?q=80&w=800', 1, 'https://images.unsplash.com/photo-1478720568477-152d9b164e26?q=80&w=800', 'ĐẶC QUYỀN VIP LOUNGE CHỈ TỪ 199K', 1, 5600);

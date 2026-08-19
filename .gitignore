@@ -1,0 +1,34 @@
+# Java
+/target/
+*.class
+*.jar
+*.war
+*.iml
+
+# Maven
+/pom.xml.tag
+/pom.xml.releaseBackup
+/pom.xml.versionsBackup
+
+# IntelliJ
+.idea/
+*.iml
+
+# VS Code
+.vscode/
+
+# Node
+node_modules/
+
+# Environment
+*.env
+.env.local
+
+# Sensitive Spring config
+src/main/resources/application.properties
+
+# Logs
+*.log
+
+# OS
+.DS_Store
