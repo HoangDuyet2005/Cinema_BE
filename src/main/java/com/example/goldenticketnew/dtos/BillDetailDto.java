@@ -1,0 +1,49 @@
+package com.example.goldenticketnew.dtos;
+
+import com.example.goldenticketnew.enums.BillStatus;
+import com.example.goldenticketnew.model.Bill;
+import com.example.goldenticketnew.model.Ticket;
+import com.example.goldenticketnew.payload.UserProfile;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+@Data
+@NoArgsConstructor
+public class BillDetailDto {
+    private int id;
+    private LocalDateTime createdTime;
+    private UserProfile user;
+    private BillStatus status;
+    private Double price;
+    private Integer amountTicket;
+    private ScheduleDto schedule;
+    private List<SeatDto> seats = new ArrayList<>();
+
+    public BillDetailDto(Bill bill, List<Ticket> tickets) {
+        this.id = bill.getId();
+        this.createdTime = bill.getCreatedTime();
+        if (bill.getUser() != null) {
+            this.user = new UserProfile(bill.getUser());
+        }
+        this.status = bill.getStatus();
+        this.price = bill.getPrice();
+        this.amountTicket = tickets != null ? tickets.size() : 0;
+        if (tickets != null && !tickets.isEmpty()) {
+            for (Ticket t : tickets) {
+                try {
+                    if (t.getSchedule() != null && this.schedule == null) {
+                        this.schedule = new ScheduleDto(t.getSchedule());
+                    }
+                    if (t.getSeat() != null) {
+                        this.seats.add(new SeatDto(t.getSeat()));
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+        }
+    }
+}
