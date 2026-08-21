@@ -4,7 +4,6 @@ import com.example.goldenticketnew.config.cadance.CadenceWorkflowConfig;
 import com.example.goldenticketnew.dtos.*;
 import com.example.goldenticketnew.enums.BillStatus;
 import com.example.goldenticketnew.enums.ResponseCode;
-import com.example.goldenticketnew.enums.SeatType;
 import com.example.goldenticketnew.exception.InternalException;
 import com.example.goldenticketnew.model.*;
 import com.example.goldenticketnew.payload.dashboard.GetDashboardTransactionRequest;
@@ -12,6 +11,7 @@ import com.example.goldenticketnew.payload.dashboard.GetDashboardTransactionResp
 import com.example.goldenticketnew.repository.*;
 import com.example.goldenticketnew.utils.ModelMapperUtils;
 import com.example.goldenticketnew.utils.ValueComparator;
+import com.example.goldenticketnew.service.pricing.PriceCalculationService;
 import com.example.goldenticketnew.workflow.interfaces.IBookingTicketWorkflow;
 import com.uber.cadence.client.WorkflowClient;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +36,9 @@ public class BillService implements IBillService {
     private final UserRepository userRepository;
     private final ISeatRepository seatRepository;
     private final IBillRepository billRepository;
+    private final IFoodItemRepository foodItemRepository;
+    private final IBillFoodRepository billFoodRepository;
+    private final PriceCalculationService priceCalculationService;
     private final WorkflowClient workflowClient;
     private final CadenceWorkflowConfig cadenceWorkflowConfig;
 
@@ -66,11 +69,8 @@ public class BillService implements IBillService {
                 throw new InternalException(ResponseCode.SEAT_NOT_FOUND);
             }
             seats.add(seat);
-            if (seat.getSeatType() != null && seat.getSeatType().equals(SeatType.VIP)) {
-                total[0] += schedule.getPrice() + 10000;
-            } else {
-                total[0] += schedule.getPrice();
-            }
+            double seatPrice = priceCalculationService.calculateSeatPrice(schedule, seat);
+            total[0] += seatPrice;
         }
 
         // Tạo Bill với trạng thái SUCCESS và sinh mã đặt vé duy nhất
@@ -86,7 +86,7 @@ public class BillService implements IBillService {
         Bill createdBill = billRepository.save(billToCreate);
         bookingRequestDTO.setBillId(createdBill.getId());
 
-        // Tạo các Ticket liên kết với Bill
+        // 1. Tạo các Vé (Ticket) lưu vào bảng ticket
         for (Seat seat : seats) {
             Ticket ticket = new Ticket();
             ticket.setSchedule(schedule);
@@ -94,6 +94,28 @@ public class BillService implements IBillService {
             ticket.setBill(createdBill);
             ticket.setQrImageURL("https://scontent-sin6-2.xx.fbcdn.net/v/t1.15752-9/268794058_655331555823095_3657556108194277679_n.png?_nc_cat=105&ccb=1-5&_nc_sid=ae9488&_nc_ohc=BrNXGO8HufkAX_OGjWc&_nc_ht=scontent-sin6-2.xx&oh=03_AVK_zaJj7pziY9nLrVqoIQJAzbomu4KPgED1PxFFpYfCrQ&oe=61F778D8");
             ticketRepository.save(ticket);
+        }
+
+        // 2. Tạo các Món Bắp Nước (BillFood) lưu vào bảng bill_food riêng biệt
+        if (bookingRequestDTO.getFoods() != null && !bookingRequestDTO.getFoods().isEmpty()) {
+            for (BookingFoodItemDto foodReq : bookingRequestDTO.getFoods()) {
+                if (foodReq.getFoodId() != null && foodReq.getQuantity() != null && foodReq.getQuantity() > 0) {
+                    FoodItem foodItem = foodItemRepository.findById(foodReq.getFoodId()).orElse(null);
+                    if (foodItem != null) {
+                        BillFood billFood = new BillFood();
+                        billFood.setBill(createdBill);
+                        billFood.setFoodItem(foodItem);
+                        billFood.setQuantity(foodReq.getQuantity());
+                        double itemPrice = foodReq.getPrice() != null ? foodReq.getPrice() : (foodItem.getPrice() != null ? foodItem.getPrice() : 0.0);
+                        billFood.setPrice(itemPrice);
+                        billFoodRepository.save(billFood);
+                        total[0] += itemPrice * foodReq.getQuantity();
+                    }
+                }
+            }
+            // Cập nhật lại tổng giá bill bao gồm cả tiền vé + tiền bắp nước
+            createdBill.setPrice(total[0]);
+            billRepository.save(createdBill);
         }
 
         return new BillDto(createdBill);
@@ -110,23 +132,15 @@ public class BillService implements IBillService {
         List<Ticket> tickets = ticketRepository.findTicketsByBillId(bill.getId());
         tickets.forEach(ticket -> {
             ticketRepository.deleteById(ticket.getId());
-            bill.setStatus(BillStatus.EXPIRATION);
-            billRepository.save(bill);
         });
+        billRepository.deleteById(bill.getId());
     }
 
     @Override
     public BillDto payBill(Integer id) {
-        Bill bill = billRepository.findById(id)
-                .orElseThrow(() -> new InternalException(ResponseCode.BILL_NOT_FOUND));
-        if (bill.getStatus().equals(BillStatus.SUCCESS)) {
-            throw new RuntimeException("Đã được thanh toán thành công");
-        }
-        if (bill.getStatus().equals(BillStatus.EXPIRATION)) {
-            throw new RuntimeException("Đã het han");
-        }
+        Bill bill = billRepository.findById(id).orElseThrow(() -> new InternalException(ResponseCode.BILL_NOT_FOUND));
         bill.setStatus(BillStatus.SUCCESS);
-        billRepository.save(bill);
+        bill = billRepository.save(bill);
         return new BillDto(bill);
     }
 
@@ -209,7 +223,8 @@ public class BillService implements IBillService {
     public BillDetailDto getBillDetail(Integer id) {
         Bill bill = billRepository.findById(id).orElseThrow(() -> new InternalException(ResponseCode.BILL_NOT_FOUND));
         List<Ticket> tickets = ticketRepository.findTicketsByBillId(id);
-        return new BillDetailDto(bill, tickets);
+        List<BillFood> billFoods = billFoodRepository.findByBillId(id);
+        return new BillDetailDto(bill, tickets, billFoods);
     }
 
     @Override
@@ -232,7 +247,7 @@ public class BillService implements IBillService {
             try {
                 int billId = Integer.parseInt(searchCode.replace("#", ""));
                 bill = billRepository.findById(billId).orElse(null);
-            } catch (NumberFormatException ignored) {
+            } catch (Exception ignored) {
             }
         }
 
@@ -265,14 +280,6 @@ public class BillService implements IBillService {
     public BillDetailDto confirmCheckIn(Integer billId) {
         Bill bill = billRepository.findById(billId)
                 .orElseThrow(() -> new InternalException(ResponseCode.BILL_NOT_FOUND));
-
-        if (bill.getStatus() != BillStatus.SUCCESS) {
-            throw new RuntimeException("Đơn đặt vé chưa thanh toán hoặc không hợp lệ!");
-        }
-
-        if (Boolean.TRUE.equals(bill.getIsCheckedIn())) {
-            throw new RuntimeException("Vé này đã được nhận / in trước đó!");
-        }
 
         bill.setIsCheckedIn(true);
         bill.setCheckInTime(LocalDateTime.now());

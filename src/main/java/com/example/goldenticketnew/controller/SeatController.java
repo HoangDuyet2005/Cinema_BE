@@ -39,6 +39,17 @@ public class SeatController {
         return ResponseEntity.ok(new ResponseBase<>(seatService.getSeatsByScheduleId(scheduleId)));
     }
 
+    @GetMapping("/room/{roomId}")
+    public ResponseEntity<ResponseBase<List<SeatDto>>> getSeatsByRoomId(@PathVariable Integer roomId){
+        return ResponseEntity.ok(new ResponseBase<>(seatService.getSeatsByRoomId(roomId)));
+    }
+
+    @PostMapping("/configure-room")
+    public ResponseEntity<ResponseBase<String>> configureRoomSeats(@RequestBody com.example.goldenticketnew.payload.seat.ConfigureRoomSeatsRequest request){
+        seatService.configureRoomSeats(request);
+        return ResponseEntity.ok(new ResponseBase<>("Cấu hình sơ đồ ghế thành công!"));
+    }
+
     @Data
     public static class HoldSeatsRequest {
         private Integer scheduleId;

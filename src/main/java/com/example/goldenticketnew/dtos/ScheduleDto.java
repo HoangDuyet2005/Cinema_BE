@@ -11,6 +11,7 @@ public class ScheduleDto {
     private int id;
     private LocalDate startDate;
     private LocalTime startTime;
+    private String format;
     private BranchDto branch;
     private RoomDto room;
     private MovieDto movie;
@@ -20,9 +21,16 @@ public class ScheduleDto {
         this.id = schedule.getId();
         this.startDate = schedule.getStartDate();
         this.startTime = schedule.getStartTime();
-        this.branch = new BranchDto(schedule.getBranch());
-        this.room = new RoomDto(schedule.getRoom());
-        this.movie = new MovieDto(schedule.getMovie());
+        this.format = schedule.getFormat() != null ? schedule.getFormat() : (schedule.getRoom() != null ? schedule.getRoom().getFormat() : "2D");
+        if (schedule.getBranch() != null) {
+            this.branch = new BranchDto(schedule.getBranch());
+        }
+        if (schedule.getRoom() != null) {
+            this.room = new RoomDto(schedule.getRoom());
+        }
+        if (schedule.getMovie() != null) {
+            this.movie = new MovieDto(schedule.getMovie());
+        }
         this.price = schedule.getPrice();
     }
 }

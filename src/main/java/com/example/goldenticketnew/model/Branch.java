@@ -21,6 +21,7 @@ public class Branch extends DateAudit {
     @Column(length = 2000)
     private String imgURL;
     private String name;
+    private String city;
     private String address;
     private String phoneNo;
 }

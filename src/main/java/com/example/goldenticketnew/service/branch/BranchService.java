@@ -44,4 +44,20 @@ public class BranchService implements IBranchService {
         Branch branch = branchRepository.findById(id).orElseThrow(() -> new InternalException(ResponseCode.BRANCH_NOT_FOUND));
         return new BranchResponse(branch);
     }
+
+    @Override
+    public List<String> getAllCities() {
+        return branchRepository.findDistinctCities();
+    }
+
+    @Override
+    public List<BranchResponse> getBranchesByCity(String city) {
+        List<Branch> branches;
+        if (city == null || city.trim().isEmpty() || city.equalsIgnoreCase("ALL")) {
+            branches = branchRepository.findAll();
+        } else {
+            branches = branchRepository.findByCityIgnoreCase(city.trim());
+        }
+        return branches.stream().map(BranchResponse::new).collect(Collectors.toList());
+    }
 }

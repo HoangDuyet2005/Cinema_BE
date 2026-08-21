@@ -14,6 +14,7 @@ public class SeatDto {
     private String name;
     private SeatType type;
     private int isOccupied;
+    private Double price;
 
     public SeatDto(Seat seat) {
         this.id = seat.getId();

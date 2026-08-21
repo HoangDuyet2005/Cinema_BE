@@ -15,4 +15,6 @@ public interface IBranchService {
     List<BranchResponse> getListBranch(GetAllBranchRequest request);
 
     BranchResponse getBranch(Integer id);
+    List<String> getAllCities();
+    List<BranchResponse> getBranchesByCity(String city);
 }

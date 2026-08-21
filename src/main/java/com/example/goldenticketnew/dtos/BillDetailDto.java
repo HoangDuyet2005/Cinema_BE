@@ -2,6 +2,7 @@ package com.example.goldenticketnew.dtos;
 
 import com.example.goldenticketnew.enums.BillStatus;
 import com.example.goldenticketnew.model.Bill;
+import com.example.goldenticketnew.model.BillFood;
 import com.example.goldenticketnew.model.Ticket;
 import com.example.goldenticketnew.payload.UserProfile;
 import lombok.Data;
@@ -10,6 +11,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Data
 @NoArgsConstructor
@@ -26,8 +28,13 @@ public class BillDetailDto {
     private String qrCode;
     private ScheduleDto schedule;
     private List<SeatDto> seats = new ArrayList<>();
+    private List<BillFoodDto> foods = new ArrayList<>();
 
     public BillDetailDto(Bill bill, List<Ticket> tickets) {
+        this(bill, tickets, null);
+    }
+
+    public BillDetailDto(Bill bill, List<Ticket> tickets, List<BillFood> billFoods) {
         this.id = bill.getId();
         this.createdTime = bill.getCreatedTime();
         if (bill.getUser() != null) {
@@ -52,6 +59,9 @@ public class BillDetailDto {
                 } catch (Exception ignored) {
                 }
             }
+        }
+        if (billFoods != null && !billFoods.isEmpty()) {
+            this.foods = billFoods.stream().map(BillFoodDto::new).collect(Collectors.toList());
         }
     }
 }

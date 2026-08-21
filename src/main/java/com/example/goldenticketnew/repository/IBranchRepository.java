@@ -12,4 +12,9 @@ public interface IBranchRepository extends JpaRepository<Branch, Integer> , JpaS
     @Query("SELECT b FROM Branch b where b.id in " +
             "(SELECT s.branch.id FROM Schedule s JOIN s.movie m WHERE s.movie.id = :movieId )")
     List<Branch> getBranchThatShowTheMovie(@Param("movieId") Integer movieId);
+
+    @Query("SELECT DISTINCT b.city FROM Branch b WHERE b.city IS NOT NULL AND b.city <> '' ORDER BY b.city ASC")
+    List<String> findDistinctCities();
+
+    List<Branch> findByCityIgnoreCase(String city);
 }

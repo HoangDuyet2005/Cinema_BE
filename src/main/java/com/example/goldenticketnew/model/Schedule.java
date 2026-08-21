@@ -24,6 +24,7 @@ public class Schedule extends UserDateAudit {
     private int id;
     private LocalDate startDate;
     private LocalTime startTime;
+    private String format = "2D";
     private double price;
     @ManyToOne
     @OnDelete(action = OnDeleteAction.CASCADE)

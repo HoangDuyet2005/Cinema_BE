@@ -59,6 +59,24 @@ public class BranchController {
     public ResponseEntity<ResponseBase<BranchResponse>> getBranchDetail( @Parameter Integer id) {
         return new ResponseEntity<>(new ResponseBase<>(branchService.getBranch(id)), HttpStatus.OK);
     }
+
+    @Operation(
+        summary = "Lấy danh sách các Tỉnh/Thành phố có rạp",
+        description = "Trả về danh sách Tỉnh/Thành phố phân biệt"
+    )
+    @GetMapping("/cities")
+    public ResponseEntity<ResponseBase<List<String>>> getAllCities() {
+        return ResponseEntity.ok(new ResponseBase<>(branchService.getAllCities()));
+    }
+
+    @Operation(
+        summary = "Lấy danh sách rạp theo Tỉnh/Thành phố",
+        description = "Lọc danh sách rạp theo Tỉnh/Thành phố (hoặc ALL để lấy tất cả)"
+    )
+    @GetMapping("/by-city")
+    public ResponseEntity<ResponseBase<List<BranchResponse>>> getBranchesByCity(@RequestParam(required = false) String city) {
+        return ResponseEntity.ok(new ResponseBase<>(branchService.getBranchesByCity(city)));
+    }
 }
 
 

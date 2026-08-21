@@ -15,6 +15,9 @@ public class BookingRequestDto {
     private Integer scheduleId;
     @NotEmpty
     private List<Integer> listSeatIds;
+    
+    private List<BookingFoodItemDto> foods;
+
     @JsonIgnore
     private Integer billId;
 }
