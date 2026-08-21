@@ -8,7 +8,6 @@ import com.example.goldenticketnew.model.Room;
 import com.example.goldenticketnew.model.Schedule;
 import com.example.goldenticketnew.model.Seat;
 import com.example.goldenticketnew.model.Ticket;
-import com.example.goldenticketnew.repository.IBillRepository;
 import com.example.goldenticketnew.repository.IScheduleRepository;
 import com.example.goldenticketnew.repository.ISeatRepository;
 import com.example.goldenticketnew.repository.TicketRepository;
@@ -29,8 +28,6 @@ public class SeatService implements ISeatService {
     private IScheduleRepository IScheduleRepository;
     @Autowired
     private TicketRepository ticketRepository;
-    @Autowired
-    private IBillRepository billRepository;
     @Autowired
     private SeatRealtimeManager seatRealtimeManager;
     @Autowired

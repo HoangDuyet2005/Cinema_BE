@@ -93,9 +93,10 @@ public class MovieController {
 
         Double userRating = null;
         if (userId != null) {
-            userRating = movieRatingRepository.findByUserIdAndMovieId(userId, movieId)
-                    .map(MovieRating::getRatingScore)
-                    .orElse(null);
+            java.util.Optional<MovieRating> ratingOpt = movieRatingRepository.findByUserIdAndMovieId(userId, movieId);
+            if (ratingOpt.isPresent()) {
+                userRating = ratingOpt.get().getRatingScore();
+            }
         }
 
         if (avgRating == null || totalVotes == null || totalVotes == 0) {
