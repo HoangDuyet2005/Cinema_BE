@@ -1,83 +1,57 @@
-# BE_Cineme
+# World Cinema - Backend (Spring Boot)
 
-This repository contains the Spring Boot backend for the Cineme / GoldenTicket project.
+Hệ thống Backend quản lý rạp chiếu phim, đặt vé xem phim online, thanh toán VNPay, soát vé mã QR và Socket Realtime.
 
-Goal: make it easy for someone who clones this repo to run the backend locally.
+---
 
-Prerequisites
-- Java 17 (OpenJDK/Temurin)
-- MySQL 8 (or compatible) and `mysql` CLI available in PATH
-- Git
-- (Optional) Docker & Docker Compose
+## 🛠️ Yêu cầu môi trường
+- **Java**: JDK 17 (khuyên dùng Eclipse Adoptium JDK 17 hoặc OpenJDK 17)
+- **Cơ sở dữ liệu**: MySQL 8.0+
+- **Maven**: Đã tích hợp sẵn Maven Wrapper (`mvnw` / `mvnw.cmd`)
 
-Quick start (Windows PowerShell)
+---
 
-1) Clone the repo
+## 🗄️ Cấu hình Cơ sở dữ liệu (MySQL)
+1. Mở MySQL Workbench hoặc Terminal MySQL.
+2. Tạo cơ sở dữ liệu `cinema2`:
+   ```sql
+   CREATE DATABASE IF NOT EXISTS cinema2 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+   ```
+3. Import toàn bộ cấu trúc bảng và dữ liệu mẫu từ file dump có sẵn trong thư mục `database/`:
+   ```bash
+   # Cách 1: Sử dụng dòng lệnh MySQL (CMD/Terminal)
+   mysql -u root -p cinema2 < database/cinema2_database_dump.sql
 
-```powershell
-git clone https://github.com/HoangDuyet2005/BE_Cineme.git
-cd BE_Cineme
-```
+   # Cách 2: Sử dụng MySQL Workbench
+   # Server -> Data Import -> Import from Self-Contained File -> Chọn database/cinema2_database_dump.sql -> Start Import
+   ```
+4. Kiểm tra cấu hình kết nối DB trong file `src/main/resources/application.properties`:
+   ```properties
+   spring.datasource.url=jdbc:mysql://localhost:3306/cinema2?serverTimezone=Asia/Ho_Chi_Minh&useSSL=false&allowPublicKeyRetrieval=true
+   spring.datasource.username=root
+   spring.datasource.password=Your_MySQL_Password
+   ```
 
-2) Create local application properties
+---
 
-Copy the example file and edit values:
+## 🚀 Hướng dẫn khởi chạy Backend
+Chạy bằng lệnh Maven Wrapper trong thư mục gốc của dự án:
 
-```powershell
-copy src\main\resources\application.properties.example src\main\resources\application.properties
-# Edit src/main/resources/application.properties: set spring.datasource.username/password and app.jwtSecret
-```
-
-3) Create the MySQL database and import sample data
-
-You can run the provided PowerShell helper (Windows) which creates the `cinema2` database and imports seed files:
-
-```powershell
-Set-Location -Path .\
-.
-.
-scripts\setup-db.ps1
-```
-
-Or run the commands manually:
-
-```sql
-CREATE DATABASE cinema2 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-```
-
-```powershell
-mysql -u <user> -p cinema2 < seed_data.sql
-mysql -u <user> -p cinema2 < seed_news.sql
-mysql -u <user> -p cinema2 < seed_promotions.sql
-```
-
-4) Run the application
-
-Using the bundled Maven wrapper (Windows PowerShell):
-
-```powershell
+```bash
+# Windows
 .\mvnw.cmd spring-boot:run
+
+# Linux / MacOS
+./mvnw spring-boot:run
 ```
 
-Or build and run the jar:
+Sau khi khởi chạy thành công:
+- **Server URL**: `http://localhost:8080`
+- **Swagger API Docs**: `http://localhost:8080/swagger-ui/index.html`
 
-```powershell
-.\mvnw.cmd clean package
-java -jar target/*.jar
-```
+---
 
-API base URL
-
-By default: `http://localhost:8080/api`
-
-Scripts included
-- `scripts/setup-db.ps1` — PowerShell script that creates `cinema2` DB and imports `seed_*.sql` (Windows)
-- `scripts/setup-db.sh` — Bash script for Linux/macOS that does the same
-
-Important notes
-- `src/main/resources/application.properties` is intentionally gitignored. Do not commit secrets.
-- If you see CORS or authentication errors, ensure `app.jwtSecret` is set in your `application.properties`.
-- If the app fails to connect to DB, verify `spring.datasource.url` and the DB user can connect remotely.
-
-If you want, I can also add a Docker Compose file that sets up MySQL + the app for local development.
-
+## 🔑 Tài khoản mẫu mặc định
+- **Admin**: `admin` / `123456`
+- **Staff (Nhân viên)**: `staff` / `123456`
+- **Khách hàng**: `duyetht` / mật khẩu cá nhân

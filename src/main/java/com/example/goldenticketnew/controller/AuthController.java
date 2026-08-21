@@ -1,6 +1,5 @@
 package com.example.goldenticketnew.controller;
 
-
 import com.example.goldenticketnew.model.RoleName;
 import com.example.goldenticketnew.payload.response.ApiResponse;
 import com.example.goldenticketnew.payload.response.JwtAuthenticationResponse;
@@ -32,39 +31,40 @@ public class AuthController {
 
     @PostMapping("/signin")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
-
         return ResponseEntity.ok(new JwtAuthenticationResponse(authService.authenticateUser(loginRequest)));
     }
 
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignUpRequest signUpRequest) {
         if (userService.existsByUsername(signUpRequest.getUsername())) {
-            return new ResponseEntity(new ApiResponse(false, "Username is already taken!"),
+            return new ResponseEntity<ApiResponse>(new ApiResponse(false, "Username is already taken!"),
                 HttpStatus.BAD_REQUEST);
         }
         if (userService.existsByEmail(signUpRequest.getEmail())) {
-            return new ResponseEntity(new ApiResponse(false, "Email Address already in use!"),
+            return new ResponseEntity<ApiResponse>(new ApiResponse(false, "Email Address already in use!"),
                 HttpStatus.BAD_REQUEST);
         }
         return ResponseEntity.created(authService.registerUser(signUpRequest, RoleName.ROLE_USER)).body(new ApiResponse(true, "User registered successfully"));
     }
+
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/registerStaff")
     public ResponseEntity<?> registerStaff(@Valid @RequestBody SignUpRequest signUpRequest) {
         if (userService.existsByUsername(signUpRequest.getUsername())) {
-            return new ResponseEntity(new ApiResponse(false, "Username is already taken!"),
+            return new ResponseEntity<ApiResponse>(new ApiResponse(false, "Username is already taken!"),
                 HttpStatus.BAD_REQUEST);
         }
         if (userService.existsByEmail(signUpRequest.getEmail())) {
-            return new ResponseEntity(new ApiResponse(false, "Email Address already in use!"),
+            return new ResponseEntity<ApiResponse>(new ApiResponse(false, "Email Address already in use!"),
                 HttpStatus.BAD_REQUEST);
         }
         return ResponseEntity.created(authService.registerUser(signUpRequest, RoleName.ROLE_STAFF)).body(new ApiResponse(true, "User registered successfully"));
     }
+
     @PutMapping("/changePassword")
-    public ResponseEntity<?> changePassword(@CurrentUser UserPrincipal currentUser , @Valid @RequestParam String newPassword, @Valid @RequestParam String oldPassword) {
-        if(authService.changePassword(currentUser,newPassword,oldPassword))
-            return new ResponseEntity(new ApiResponse(true, "Success! New password can be use right now!") , HttpStatus.OK);
-        return new ResponseEntity(new ApiResponse(false, "Fail to change password!"),  HttpStatus.INTERNAL_SERVER_ERROR);
+    public ResponseEntity<?> changePassword(@CurrentUser UserPrincipal currentUser, @Valid @RequestParam String newPassword, @Valid @RequestParam String oldPassword) {
+        if (authService.changePassword(currentUser, newPassword, oldPassword))
+            return new ResponseEntity<ApiResponse>(new ApiResponse(true, "Success! New password can be use right now!"), HttpStatus.OK);
+        return new ResponseEntity<ApiResponse>(new ApiResponse(false, "Fail to change password!"), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

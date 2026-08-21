@@ -4,7 +4,6 @@ package com.example.goldenticketnew.service.room;
 import com.example.goldenticketnew.dtos.RoomDto;
 import com.example.goldenticketnew.payload.response.PageResponse;
 import com.example.goldenticketnew.repository.IRoomRepository;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,8 +17,7 @@ public class RoomService implements IRoomService {
     @Autowired
     private IRoomRepository IRoomRepository;
 
-    @Autowired
-    private ModelMapper modelMapper;
+
 
     @Override
     public List<RoomDto> getRooms(Integer movieId, Integer branchId, String startDate, String startTime) {

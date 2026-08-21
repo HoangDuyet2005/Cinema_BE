@@ -1,7 +1,6 @@
 package com.example.goldenticketnew.model;
 
 import com.example.goldenticketnew.model.audit.UserDateAudit;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

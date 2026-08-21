@@ -9,10 +9,7 @@ import com.example.goldenticketnew.model.Role;
 import com.example.goldenticketnew.model.User;
 import com.example.goldenticketnew.payload.GetAllUserRequest;
 import com.example.goldenticketnew.payload.UserSummary;
-import com.example.goldenticketnew.payload.response.ApiResponse;
 import com.example.goldenticketnew.payload.response.PageResponse;
-import com.example.goldenticketnew.payload.resquest.DenyContentCreatorRequest;
-import com.example.goldenticketnew.payload.resquest.SendContentCreatorRequest;
 import com.example.goldenticketnew.payload.resquest.UpdateUserRequest;
 import com.example.goldenticketnew.repository.IArticleRepository;
 import com.example.goldenticketnew.repository.UserRepository;
@@ -24,7 +21,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -121,7 +117,7 @@ public class UserService implements IUserService {
             userDto.setAmountArticle(articleRepository.getTotalArticleInUser(dateTimeMY.getYear(),dateTimeMY.getMonthValue(),userDto.getUsername()));
 
         }
-        return userDtos.stream().sorted(Comparator.comparing(UserDto::getAmountArticle).reversed()).collect(Collectors.toList());
+        return userDtos.stream().sorted((u1, u2) -> Long.compare(u2.getAmountArticle() != null ? u2.getAmountArticle() : 0L, u1.getAmountArticle() != null ? u1.getAmountArticle() : 0L)).collect(Collectors.toList());
     }
 
 

@@ -20,6 +20,10 @@ public class BillDetailDto {
     private BillStatus status;
     private Double price;
     private Integer amountTicket;
+    private String bookingCode;
+    private Boolean isCheckedIn;
+    private LocalDateTime checkInTime;
+    private String qrCode;
     private ScheduleDto schedule;
     private List<SeatDto> seats = new ArrayList<>();
 
@@ -32,6 +36,10 @@ public class BillDetailDto {
         this.status = bill.getStatus();
         this.price = bill.getPrice();
         this.amountTicket = tickets != null ? tickets.size() : 0;
+        this.bookingCode = bill.getBookingCode();
+        this.isCheckedIn = bill.getIsCheckedIn() != null ? bill.getIsCheckedIn() : false;
+        this.checkInTime = bill.getCheckInTime();
+        this.qrCode = bill.getQrCode();
         if (tickets != null && !tickets.isEmpty()) {
             for (Ticket t : tickets) {
                 try {

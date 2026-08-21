@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import java.util.Date;
 
 @Component
+@SuppressWarnings("deprecation")
 public class JwtTokenProvider {
 
     private static final Logger logger = LoggerFactory.getLogger(JwtTokenProvider.class);

@@ -1,7 +1,6 @@
 package com.example.goldenticketnew.service.auth;
 
 import com.example.goldenticketnew.model.RoleName;
-import com.example.goldenticketnew.payload.resquest.ChangePasswordRequest;
 import com.example.goldenticketnew.payload.resquest.LoginRequest;
 import com.example.goldenticketnew.payload.resquest.SignUpRequest;
 import com.example.goldenticketnew.security.UserPrincipal;

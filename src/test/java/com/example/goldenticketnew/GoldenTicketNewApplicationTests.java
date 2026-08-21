@@ -1,5 +1,4 @@
 package com.example.goldenticketnew;
-import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 
@@ -10,8 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 //import com.example.goldenticketnew.payload.response.ResponseBase;
 //import com.example.goldenticketnew.repository.IMovieRepository;
 //import com.example.goldenticketnew.utils.ModelMapperUtils;
-//import org.junit.jupiter.api.Test;
-//import org.mockito.Mock;
+////import org.mockito.Mock;
 //import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.boot.test.context.SpringBootTest;
 //import org.springframework.http.MediaType;

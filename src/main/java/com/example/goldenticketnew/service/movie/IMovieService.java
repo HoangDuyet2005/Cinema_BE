@@ -1,7 +1,6 @@
 package com.example.goldenticketnew.service.movie;
 
 import com.example.goldenticketnew.dtos.MovieDto;
-import com.example.goldenticketnew.model.Movie;
 import com.example.goldenticketnew.payload.response.PageResponse;
 import com.example.goldenticketnew.payload.resquest.AddNewMovieRequest;
 import com.example.goldenticketnew.payload.resquest.GetAllMovieRequest;

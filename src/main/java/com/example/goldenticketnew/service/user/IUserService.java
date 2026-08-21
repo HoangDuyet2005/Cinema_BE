@@ -2,19 +2,12 @@ package com.example.goldenticketnew.service.user;
 
 
 import com.example.goldenticketnew.dtos.UserDto;
-import com.example.goldenticketnew.dtos.UserReportDto;
 import com.example.goldenticketnew.model.User;
 import com.example.goldenticketnew.payload.GetAllUserRequest;
-import com.example.goldenticketnew.payload.UserProfile;
 import com.example.goldenticketnew.payload.UserSummary;
-import com.example.goldenticketnew.payload.response.ApiResponse;
 import com.example.goldenticketnew.payload.response.PageResponse;
-import com.example.goldenticketnew.payload.resquest.DenyContentCreatorRequest;
-import com.example.goldenticketnew.payload.resquest.SendContentCreatorRequest;
-import com.example.goldenticketnew.payload.resquest.UpdateCategoryRequest;
 import com.example.goldenticketnew.payload.resquest.UpdateUserRequest;
 import com.example.goldenticketnew.security.UserPrincipal;
-import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

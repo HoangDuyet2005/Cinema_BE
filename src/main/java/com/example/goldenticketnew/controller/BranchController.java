@@ -6,7 +6,6 @@ import com.example.goldenticketnew.payload.response.BranchResponse;
 import com.example.goldenticketnew.payload.response.PageResponse;
 import com.example.goldenticketnew.payload.response.ResponseBase;
 import com.example.goldenticketnew.payload.resquest.GetAllBranchRequest;
-import com.example.goldenticketnew.repository.IBranchRepository;
 import com.example.goldenticketnew.service.branch.IBranchService;
 
 import io.swagger.v3.oas.annotations.Operation;

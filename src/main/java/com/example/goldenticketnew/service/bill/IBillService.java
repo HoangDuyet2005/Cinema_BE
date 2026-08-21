@@ -1,20 +1,24 @@
 package com.example.goldenticketnew.service.bill;
 
-
 import com.example.goldenticketnew.dtos.*;
-
 import com.example.goldenticketnew.enums.BillStatus;
 import com.example.goldenticketnew.payload.dashboard.GetDashboardTransactionRequest;
 import com.example.goldenticketnew.payload.dashboard.GetDashboardTransactionResponse;
 
 import java.util.List;
 
+import com.example.goldenticketnew.dtos.CheckTicketResponseDto;
+
 public interface IBillService {
+    CheckTicketResponseDto checkTicket(String codeOrId);
+    BillDetailDto confirmCheckIn(Integer billId);
     BillDto createNewBill(BookingRequestDto bookingRequestDTO);
 
     void removeBill(DeleteBillTicketRequest request);
 
     BillDto payBill(Integer id);
+
+    BillDetailDto getBillDetail(Integer id);
 
     BillDto bookingHandler(BookingRequestDto bookingRequestDTO);
 
@@ -25,5 +29,4 @@ public interface IBillService {
     List<UserReportDto> getUserDashBoard(BillStatus status);
 
     List<BillDto> getList(GetDashboardTransactionRequest request);
-
 }

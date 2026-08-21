@@ -2,12 +2,14 @@ package com.example.goldenticketnew.model;
 
 import com.example.goldenticketnew.model.audit.UserDateAudit;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
 
 @Data
+@EqualsAndHashCode(callSuper = false)
 @Table(name = "ticket")
 @Entity
 public class Ticket extends UserDateAudit {

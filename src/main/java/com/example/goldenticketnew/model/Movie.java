@@ -4,6 +4,7 @@ import com.example.goldenticketnew.model.audit.UserDateAudit;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 
@@ -12,6 +13,7 @@ import java.time.LocalDate;
 
 
 @Data
+@EqualsAndHashCode(callSuper = false)
 @Table(name = "movie")
 @Entity
 @NoArgsConstructor

@@ -3,20 +3,23 @@ package com.example.goldenticketnew.model;
 import com.example.goldenticketnew.enums.ArticleStatus;
 import com.example.goldenticketnew.enums.ArticleType;
 import com.example.goldenticketnew.model.audit.UserDateAudit;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 
 import javax.persistence.*;
 
-@Getter
-@Setter
-@Entity
+@Data
+@EqualsAndHashCode(callSuper = false)
 @Table(name = "article")
-@Builder
-@AllArgsConstructor
+@Entity
 @NoArgsConstructor
+@AllArgsConstructor
 @FieldNameConstants
+@Builder
 public class Article extends UserDateAudit {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -45,6 +48,7 @@ public class Article extends UserDateAudit {
 
     private String thumbnail;
 
+    @Builder.Default
     private long view = 0;
 
     public Long getId() { return id; }

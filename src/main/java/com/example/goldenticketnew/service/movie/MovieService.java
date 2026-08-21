@@ -1,7 +1,5 @@
 package com.example.goldenticketnew.service.movie;
 
-
-import com.example.goldenticketnew.dtos.BillDto;
 import com.example.goldenticketnew.dtos.MovieDto;
 import com.example.goldenticketnew.enums.ResponseCode;
 import com.example.goldenticketnew.exception.InternalException;
@@ -11,6 +9,7 @@ import com.example.goldenticketnew.payload.resquest.AddNewMovieRequest;
 import com.example.goldenticketnew.payload.resquest.GetAllMovieRequest;
 import com.example.goldenticketnew.payload.resquest.UpdateMovieRequest;
 import com.example.goldenticketnew.repository.IMovieRepository;
+import com.example.goldenticketnew.repository.MovieRatingRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -27,7 +26,25 @@ public class MovieService implements IMovieService {
     private IMovieRepository movieRepository;
 
     @Autowired
+    private MovieRatingRepository movieRatingRepository;
+
+    @Autowired
     private ModelMapper modelMapper;
+
+    private MovieDto mapToMovieDto(Movie movie) {
+        if (movie == null) return null;
+        MovieDto dto = modelMapper.map(movie, MovieDto.class);
+        Double avg = movieRatingRepository.getAverageRatingByMovieId(movie.getId());
+        Long count = movieRatingRepository.countRatingsByMovieId(movie.getId());
+        if (avg != null && count != null && count > 0) {
+            dto.setAvgRating(Math.round(avg * 10.0) / 10.0);
+            dto.setTotalVotes(count);
+        } else {
+            dto.setAvgRating(0.0);
+            dto.setTotalVotes(0L);
+        }
+        return dto;
+    }
 
     @Override
     public MovieDto addNewMovie(AddNewMovieRequest request) {
@@ -50,7 +67,7 @@ public class MovieService implements IMovieService {
             .trailerURL(request.getTrailerURL())
             .isShowing(request.getIsShowing())
             .build();
-        return modelMapper.map(movieRepository.save(movie), MovieDto.class);
+        return mapToMovieDto(movieRepository.save(movie));
     }
 
     @Override
@@ -73,28 +90,28 @@ public class MovieService implements IMovieService {
         movie.setName(request.getName());
         movie.setCategories(request.getCategories());
         movie.setReleaseDate(request.getReleaseDate());
-        return modelMapper.map(movieRepository.save(movie), MovieDto.class);
+        return mapToMovieDto(movieRepository.save(movie));
     }
-
 
     @Override
     public List<MovieDto> findAllShowingMovies() {
         return movieRepository.findMoviesByIsShowingOrderByIdDesc(1)
             .stream()
-            .map(movie -> modelMapper.map(movie, MovieDto.class))
+            .map(this::mapToMovieDto)
             .collect(Collectors.toList());
     }
 
     @Override
     public MovieDto getById(Integer movieId) {
         Movie movie = movieRepository.findById(movieId).orElseThrow(() -> new InternalException(ResponseCode.MOVIE_NOT_FOUND));
-        return modelMapper.map(movie, MovieDto.class);
+        return mapToMovieDto(movie);
     }
 
     @Override
     public List<MovieDto> findAllShowingMoviesByName(String keyword) {
         return movieRepository.findMoviesByIsShowingAndNameContaining(1, keyword)
-            .stream().map(movie -> modelMapper.map(movie, MovieDto.class))
+            .stream()
+            .map(this::mapToMovieDto)
             .collect(Collectors.toList());
     }
 
@@ -107,18 +124,17 @@ public class MovieService implements IMovieService {
         } catch (Exception e) {
             return false;
         }
-
     }
 
     @Override
     public PageResponse<MovieDto> getAllMovie(GetAllMovieRequest request) {
         Page<Movie> moviePage = movieRepository.findAll(request.getSpecification(), request.getPageable());
-        return new PageResponse<>(moviePage.map(MovieDto::new));
+        return new PageResponse<>(moviePage.map(this::mapToMovieDto));
     }
 
     @Override
     public List<MovieDto> findAllListMovies(GetAllMovieRequest request) {
         List<Movie> movieList = movieRepository.findAll(request.getSpecification());
-        return movieList.stream().map(MovieDto::new).collect(Collectors.toList());
+        return movieList.stream().map(this::mapToMovieDto).collect(Collectors.toList());
     }
 }

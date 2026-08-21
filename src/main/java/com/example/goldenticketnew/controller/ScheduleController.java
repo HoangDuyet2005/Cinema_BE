@@ -1,11 +1,8 @@
 package com.example.goldenticketnew.controller;
 
-import com.example.goldenticketnew.dtos.ArticleDto;
 import com.example.goldenticketnew.dtos.ScheduleDto;
-import com.example.goldenticketnew.enums.ArticleType;
 import com.example.goldenticketnew.enums.ResponseCode;
 import com.example.goldenticketnew.exception.InternalException;
-import com.example.goldenticketnew.payload.article.request.AddNewArticleRequest;
 import com.example.goldenticketnew.payload.response.PageResponse;
 import com.example.goldenticketnew.payload.response.ResponseBase;
 import com.example.goldenticketnew.payload.resquest.GetAllScheduleChatBoxRequest;
@@ -25,7 +22,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @CrossOrigin("*")
 @RestController
@@ -80,4 +76,8 @@ public class ScheduleController {
         return new ResponseEntity<>(new ResponseBase<>(scheduleService.getAllSchedule(request)), HttpStatus.OK);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<ResponseBase<ScheduleDto>> getScheduleById(@PathVariable Integer id) {
+        return ResponseEntity.ok(new ResponseBase<>(scheduleService.getScheduleById(id)));
+    }
 }

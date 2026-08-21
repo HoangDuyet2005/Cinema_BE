@@ -1,6 +1,5 @@
 package com.example.goldenticketnew.payload.response;
 
-import com.example.goldenticketnew.dtos.BillDto;
 import com.example.goldenticketnew.model.Branch;
 import com.example.goldenticketnew.repository.IRoomRepository;
 import com.example.goldenticketnew.utils.BeanUtils;

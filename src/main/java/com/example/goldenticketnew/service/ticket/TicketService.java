@@ -6,8 +6,6 @@ import com.example.goldenticketnew.dtos.TicketDto;
 import com.example.goldenticketnew.model.Ticket;
 import com.example.goldenticketnew.payload.response.PageResponse;
 import com.example.goldenticketnew.repository.TicketRepository;
-import com.example.goldenticketnew.utils.ModelMapperUtils;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,8 +19,7 @@ import java.util.stream.Collectors;
 public class TicketService implements ITicketService {
     @Autowired
     private TicketRepository ticketRepository;
-    @Autowired
-    private ModelMapper modelMapper;
+
     @Override
     public List<TicketDto> getTicketsByUserId(Long userId) {
         try{

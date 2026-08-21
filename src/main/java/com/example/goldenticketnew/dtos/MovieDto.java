@@ -23,6 +23,8 @@ public class MovieDto {
     private String trailerURL;
     private String language;
     private String rated;
+    private Double avgRating;
+    private Long totalVotes;
 
     public MovieDto(Movie movie) {
         this.id = movie.getId();
@@ -39,5 +41,7 @@ public class MovieDto {
         this.trailerURL = movie.getTrailerURL();
         this.language = movie.getLanguage();
         this.rated = movie.getRated();
+        this.avgRating = 0.0;
+        this.totalVotes = 0L;
     }
 }

@@ -16,8 +16,6 @@ import com.example.goldenticketnew.repository.IMovieRepository;
 import com.example.goldenticketnew.repository.IRoomRepository;
 import com.example.goldenticketnew.repository.IScheduleRepository;
 import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
@@ -40,7 +38,6 @@ public class ScheduleService implements IScheduleService {
     private final IRoomRepository roomRepository;
 
 
-    private final ModelMapper modelMapper;
 
     @Override
     public List<String> getStartTimes(Integer movieId, Integer branchId, LocalDate startDate) {
@@ -81,6 +78,12 @@ public class ScheduleService implements IScheduleService {
         schedule.setStartDate(LocalDate.parse(request.getStartDate()));
         schedule.setStartTime(LocalTime.parse(request.getStartTime()));
         schedule = scheduleRepository.save(schedule);
+        return new ScheduleDto(schedule);
+    }
+    @Override
+    public ScheduleDto getScheduleById(Integer id) {
+        Schedule schedule = scheduleRepository.findById(id)
+                .orElseThrow(() -> new InternalException(ResponseCode.SCHEDULE_NOT_FOUND));
         return new ScheduleDto(schedule);
     }
 }

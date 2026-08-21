@@ -1,6 +1,5 @@
 package com.example.goldenticketnew.config;
 
-
 import com.example.goldenticketnew.dtos.FieldRequestError;
 import com.example.goldenticketnew.enums.ResponseCode;
 import com.example.goldenticketnew.payload.response.ResponseBase;
@@ -15,7 +14,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,8 +23,6 @@ public class BaseExceptionController {
 
     public BaseExceptionController() {
     }
-
-
 
     @ExceptionHandler({Exception.class})
     public ResponseEntity<?> handleException(Exception e) {
@@ -43,7 +39,7 @@ public class BaseExceptionController {
             errors.add(new FieldRequestError.Error(fieldName, errorMessage));
         });
         log.error("Invalid argument: {}", errors);
-        return new ResponseEntity<>(new ResponseBase(
+        return new ResponseEntity<>(new ResponseBase<FieldRequestError>(
                 new FieldRequestError(errors),
                 ResponseCode.INVALID_PARAM.getCode(),
                 ResponseCode.INVALID_PARAM.getMessage()
@@ -52,8 +48,8 @@ public class BaseExceptionController {
 
     @ExceptionHandler({PropertyReferenceException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseBase handlePropertyReferenceException(PropertyReferenceException e) {
-        return new ResponseBase(
+    public ResponseBase<FieldRequestError.Error> handlePropertyReferenceException(PropertyReferenceException e) {
+        return new ResponseBase<FieldRequestError.Error>(
                 new FieldRequestError.Error(e.getPropertyName(), String.format("Field %s is not accepted", e.getPropertyName())),
                 ResponseCode.INVALID_PARAM.getCode(),
                 ResponseCode.INVALID_PARAM.getMessage()

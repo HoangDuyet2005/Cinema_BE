@@ -17,4 +17,5 @@ public interface IScheduleService {
     PageResponse<ScheduleDto> getAllSchedule(GetAllScheduleRequest request);
 
     ScheduleDto addNewSchedule(AddNewScheduleRequest request);
+    ScheduleDto getScheduleById(Integer id);
 }

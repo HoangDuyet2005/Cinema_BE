@@ -1,7 +1,6 @@
 package com.example.goldenticketnew.dtos;
 
 import com.example.goldenticketnew.model.Ticket;
-import com.example.goldenticketnew.utils.ModelMapperUtils;
 import lombok.Data;
 
 @Data

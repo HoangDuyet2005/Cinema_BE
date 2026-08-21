@@ -1,13 +1,16 @@
 package com.example.goldenticketnew.controller;
 
-
 import com.example.goldenticketnew.dtos.MovieDto;
+import com.example.goldenticketnew.dtos.MovieRatingDto;
+import com.example.goldenticketnew.model.MovieRating;
 import com.example.goldenticketnew.payload.response.ApiResponse;
 import com.example.goldenticketnew.payload.response.PageResponse;
 import com.example.goldenticketnew.payload.response.ResponseBase;
 import com.example.goldenticketnew.payload.resquest.AddNewMovieRequest;
 import com.example.goldenticketnew.payload.resquest.GetAllMovieRequest;
+import com.example.goldenticketnew.payload.resquest.MovieRatingRequest;
 import com.example.goldenticketnew.payload.resquest.UpdateMovieRequest;
+import com.example.goldenticketnew.repository.MovieRatingRepository;
 import com.example.goldenticketnew.service.movie.IMovieService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,6 +31,9 @@ public class MovieController {
 
     @Autowired
     private IMovieService movieService;
+
+    @Autowired
+    private MovieRatingRepository movieRatingRepository;
 
     @GetMapping("/showing")
     public ResponseBase<List<MovieDto>> findAllShowingMovies(){
@@ -76,5 +82,72 @@ public class MovieController {
     public ResponseBase<List<MovieDto>> findAllMovies(@ParameterObject Pageable pageable, @ParameterObject GetAllMovieRequest request){
         request.setPageable(pageable);
         return new ResponseBase<>(movieService.findAllListMovies(request));
+    }
+
+    @GetMapping("/{movieId}/rating")
+    public ResponseBase<MovieRatingDto> getMovieRating(
+            @PathVariable Integer movieId,
+            @RequestParam(required = false) Long userId) {
+        Double avgRating = movieRatingRepository.getAverageRatingByMovieId(movieId);
+        Long totalVotes = movieRatingRepository.countRatingsByMovieId(movieId);
+
+        Double userRating = null;
+        if (userId != null) {
+            userRating = movieRatingRepository.findByUserIdAndMovieId(userId, movieId)
+                    .map(MovieRating::getRatingScore)
+                    .orElse(null);
+        }
+
+        if (avgRating == null || totalVotes == null || totalVotes == 0) {
+            avgRating = 0.0;
+            totalVotes = 0L;
+        } else {
+            avgRating = Math.round(avgRating * 10.0) / 10.0;
+        }
+
+        MovieRatingDto dto = MovieRatingDto.builder()
+                .movieId(movieId)
+                .userId(userId)
+                .avgRating(avgRating)
+                .totalVotes(totalVotes)
+                .userRating(userRating)
+                .build();
+
+        return new ResponseBase<>(dto);
+    }
+
+    @PostMapping("/rating")
+    public ResponseBase<MovieRatingDto> rateMovie(@Valid @RequestBody MovieRatingRequest request) {
+        MovieRating rating = movieRatingRepository
+                .findByUserIdAndMovieId(request.getUserId(), request.getMovieId())
+                .orElseGet(() -> {
+                    MovieRating newRating = new MovieRating();
+                    newRating.setUserId(request.getUserId());
+                    newRating.setMovieId(request.getMovieId());
+                    return newRating;
+                });
+
+        rating.setRatingScore(request.getScore());
+        movieRatingRepository.save(rating);
+
+        Double avgRating = movieRatingRepository.getAverageRatingByMovieId(request.getMovieId());
+        Long totalVotes = movieRatingRepository.countRatingsByMovieId(request.getMovieId());
+
+        if (avgRating == null) {
+            avgRating = request.getScore();
+        } else {
+            avgRating = Math.round(avgRating * 10.0) / 10.0;
+        }
+
+        MovieRatingDto dto = MovieRatingDto.builder()
+                .movieId(request.getMovieId())
+                .userId(request.getUserId())
+                .score(request.getScore())
+                .avgRating(avgRating)
+                .totalVotes(totalVotes)
+                .userRating(request.getScore())
+                .build();
+
+        return new ResponseBase<>(dto);
     }
 }

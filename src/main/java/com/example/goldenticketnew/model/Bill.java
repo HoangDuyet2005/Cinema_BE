@@ -2,7 +2,6 @@ package com.example.goldenticketnew.model;
 
 import com.example.goldenticketnew.enums.BillStatus;
 import com.example.goldenticketnew.model.audit.UserDateAudit;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -33,4 +32,19 @@ public class Bill extends UserDateAudit {
     private BillStatus status;
     private Double price;
 
+    @Column(name = "booking_code", unique = true)
+    private String bookingCode;
+
+    @Column(name = "is_checked_in")
+    private Boolean isCheckedIn = false;
+
+    @Column(name = "check_in_time")
+    private LocalDateTime checkInTime;
+
+    @Column(name = "qr_code", length = 1000)
+    private String qrCode;
+
+    public Boolean getIsCheckedIn() {
+        return isCheckedIn != null ? isCheckedIn : false;
+    }
 }

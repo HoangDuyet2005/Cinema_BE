@@ -89,8 +89,6 @@ public class AuthService implements IAuthService {
             )
         );
 
-        String a = passwordEncoder.encode(newPassword);
-        String b = user.getPassword();
         if(!authentication.isAuthenticated()){
             throw new AppException(
                 "Password invalid");
