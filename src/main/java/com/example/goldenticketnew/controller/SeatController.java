@@ -94,7 +94,10 @@ public class SeatController {
             ));
         }
 
-        // 2. Nếu tất cả đều rảnh -> Khóa cho user này
+        // 2. Giải phóng các ghế cũ đã giữ trước đó của user này
+        seatRealtimeManager.releaseAllUserSeats(request.getScheduleId(), userId);
+
+        // 3. Nếu tất cả đều rảnh -> Khóa các ghế mới cho user này
         for (Integer seatId : request.getSeatIds()) {
             seatRealtimeManager.holdSeat(request.getScheduleId(), seatId, userId);
         }

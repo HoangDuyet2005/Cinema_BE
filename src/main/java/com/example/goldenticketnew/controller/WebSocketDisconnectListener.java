@@ -24,14 +24,16 @@ public class WebSocketDisconnectListener {
         String sessionId = headerAccessor.getSessionId();
 
         SeatRealtimeManager.SessionDisconnectResult result = realtimeManager.handleSessionDisconnect(sessionId);
-        if (result != null && result.getScheduleId() != null) {
-            SeatRealtimeMessage msg = new SeatRealtimeMessage();
-            msg.setScheduleId(result.getScheduleId());
-            msg.setUserId(result.getUserId());
-            msg.setType("SYNC");
-            msg.setHoldingSeatIds(realtimeManager.getHoldingSeatIds(result.getScheduleId()));
-            messagingTemplate.convertAndSend("/topic/seats/" + result.getScheduleId(), msg);
-            log.info("Client disconnected (sessionId: {}). Released seats {} for schedule {}", sessionId, result.getReleasedSeatIds(), result.getScheduleId());
+        if (result != null) {
+            if (result.getScheduleId() != null) {
+                SeatRealtimeMessage msg = new SeatRealtimeMessage();
+                msg.setScheduleId(result.getScheduleId());
+                msg.setUserId(result.getUserId());
+                msg.setType("SYNC");
+                msg.setHoldingSeatIds(realtimeManager.getHoldingSeatIds(result.getScheduleId()));
+                messagingTemplate.convertAndSend("/topic/seats/" + result.getScheduleId(), msg);
+                log.info("Client disconnected (sessionId: {}). Released seats {} for schedule {}", sessionId, result.getReleasedSeatIds(), result.getScheduleId());
+            }
         }
     }
 }

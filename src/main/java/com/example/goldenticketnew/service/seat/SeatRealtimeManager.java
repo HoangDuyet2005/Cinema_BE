@@ -103,27 +103,32 @@ public class SeatRealtimeManager {
     public synchronized SessionDisconnectResult handleSessionDisconnect(String sessionId) {
         if (sessionId == null) return null;
         Map.Entry<Integer, Integer> mapping = sessionUserMap.remove(sessionId);
-        if (mapping == null) return null;
 
-        Integer scheduleId = mapping.getKey();
-        Integer userId = mapping.getValue();
+        Integer targetScheduleId = mapping != null ? mapping.getKey() : null;
+        Integer targetUserId = mapping != null ? mapping.getValue() : null;
         Set<Integer> releasedSeatIds = new HashSet<>();
 
-        ConcurrentHashMap<Integer, LockInfo> locks = scheduleLocks.get(scheduleId);
-        if (locks != null) {
-            locks.entrySet().removeIf(entry -> {
-                LockInfo info = entry.getValue();
-                boolean shouldRemove = (info.getSessionId() != null && info.getSessionId().equals(sessionId))
-                        || (info.getUserId() != null && info.getUserId().equals(userId))
-                        || info.isExpired();
-                if (shouldRemove) {
-                    releasedSeatIds.add(entry.getKey());
-                }
-                return shouldRemove;
-            });
+        // Quét dọn dẹp các lock khớp với sessionId hoặc targetUserId hoặc đã quá hạn
+        for (Map.Entry<Integer, ConcurrentHashMap<Integer, LockInfo>> schedEntry : scheduleLocks.entrySet()) {
+            Integer schedId = schedEntry.getKey();
+            ConcurrentHashMap<Integer, LockInfo> locks = schedEntry.getValue();
+            if (locks != null) {
+                locks.entrySet().removeIf(entry -> {
+                    LockInfo info = entry.getValue();
+                    boolean matchSession = sessionId.equals(info.getSessionId());
+                    boolean matchUser = targetUserId != null && targetUserId.equals(info.getUserId()) && (targetScheduleId == null || targetScheduleId.equals(schedId));
+                    boolean isExpired = info.isExpired();
+
+                    if (matchSession || matchUser || isExpired) {
+                        releasedSeatIds.add(entry.getKey());
+                        return true;
+                    }
+                    return false;
+                });
+            }
         }
 
-        return new SessionDisconnectResult(scheduleId, userId, releasedSeatIds);
+        return new SessionDisconnectResult(targetScheduleId, targetUserId, releasedSeatIds);
     }
 
     public List<Integer> getHoldingSeatIds(Integer scheduleId) {
