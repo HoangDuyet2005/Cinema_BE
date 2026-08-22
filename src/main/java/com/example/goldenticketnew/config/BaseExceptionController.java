@@ -33,16 +33,21 @@ public class BaseExceptionController {
     @ExceptionHandler({MethodArgumentNotValidException.class})
     public ResponseEntity<?> handleArgumentInvalidException(MethodArgumentNotValidException e) {
         List<FieldRequestError.Error> errors = new ArrayList<>();
+        StringBuilder errorMsg = new StringBuilder();
         e.getBindingResult().getAllErrors().forEach((error) -> {
             String fieldName = ((FieldError) error).getField();
             String errorMessage = error.getDefaultMessage();
             errors.add(new FieldRequestError.Error(fieldName, errorMessage));
+            if (errorMsg.length() == 0 && errorMessage != null) {
+                errorMsg.append(errorMessage);
+            }
         });
         log.error("Invalid argument: {}", errors);
+        String finalMsg = errorMsg.length() > 0 ? errorMsg.toString() : "Thông tin nhập không hợp lệ!";
         return new ResponseEntity<>(new ResponseBase<FieldRequestError>(
                 new FieldRequestError(errors),
                 ResponseCode.INVALID_PARAM.getCode(),
-                ResponseCode.INVALID_PARAM.getMessage()
+                finalMsg
         ), HttpStatus.BAD_REQUEST);
     }
 

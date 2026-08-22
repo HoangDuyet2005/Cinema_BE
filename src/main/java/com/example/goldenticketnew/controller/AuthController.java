@@ -37,28 +37,34 @@ public class AuthController {
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignUpRequest signUpRequest) {
         if (userService.existsByUsername(signUpRequest.getUsername())) {
-            return new ResponseEntity<ApiResponse>(new ApiResponse(false, "Username is already taken!"),
+            return new ResponseEntity<ApiResponse>(
+                new ApiResponse(false, "Tên tài khoản này đã tồn tại! Vui lòng chọn tên tài khoản khác."),
                 HttpStatus.BAD_REQUEST);
         }
         if (userService.existsByEmail(signUpRequest.getEmail())) {
-            return new ResponseEntity<ApiResponse>(new ApiResponse(false, "Email Address already in use!"),
+            return new ResponseEntity<ApiResponse>(
+                new ApiResponse(false, "Địa chỉ Email này đã được đăng ký! Vui lòng sử dụng email khác hoặc đăng nhập."),
                 HttpStatus.BAD_REQUEST);
         }
-        return ResponseEntity.created(authService.registerUser(signUpRequest, RoleName.ROLE_USER)).body(new ApiResponse(true, "User registered successfully"));
+        return ResponseEntity.created(authService.registerUser(signUpRequest, RoleName.ROLE_USER))
+            .body(new ApiResponse(true, "Đăng ký tài khoản thành công!"));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/registerStaff")
     public ResponseEntity<?> registerStaff(@Valid @RequestBody SignUpRequest signUpRequest) {
         if (userService.existsByUsername(signUpRequest.getUsername())) {
-            return new ResponseEntity<ApiResponse>(new ApiResponse(false, "Username is already taken!"),
+            return new ResponseEntity<ApiResponse>(
+                new ApiResponse(false, "Tên tài khoản nhân viên này đã tồn tại!"),
                 HttpStatus.BAD_REQUEST);
         }
         if (userService.existsByEmail(signUpRequest.getEmail())) {
-            return new ResponseEntity<ApiResponse>(new ApiResponse(false, "Email Address already in use!"),
+            return new ResponseEntity<ApiResponse>(
+                new ApiResponse(false, "Địa chỉ Email này đã được sử dụng!"),
                 HttpStatus.BAD_REQUEST);
         }
-        return ResponseEntity.created(authService.registerUser(signUpRequest, RoleName.ROLE_STAFF)).body(new ApiResponse(true, "User registered successfully"));
+        return ResponseEntity.created(authService.registerUser(signUpRequest, RoleName.ROLE_STAFF))
+            .body(new ApiResponse(true, "Đăng ký tài khoản nhân viên thành công!"));
     }
 
     @PutMapping("/changePassword")
