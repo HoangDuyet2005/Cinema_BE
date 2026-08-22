@@ -9,7 +9,6 @@ import com.example.goldenticketnew.model.*;
 import com.example.goldenticketnew.payload.dashboard.GetDashboardTransactionRequest;
 import com.example.goldenticketnew.payload.dashboard.GetDashboardTransactionResponse;
 import com.example.goldenticketnew.repository.*;
-import com.example.goldenticketnew.utils.ModelMapperUtils;
 import com.example.goldenticketnew.utils.ValueComparator;
 import com.example.goldenticketnew.service.pricing.PriceCalculationService;
 import com.example.goldenticketnew.workflow.interfaces.IBookingTicketWorkflow;
@@ -168,12 +167,17 @@ public class BillService implements IBillService {
 
     @Override
     public GetDashboardTransactionResponse getDashBoardTransaction(GetDashboardTransactionRequest request) {
-        List<DayTransactionReport> dayReports = new ArrayList<>();
-        if (request.getStatus().equals(BillStatus.SUCCESS)) {
-            dayReports = billRepository.findDashBoardBillByFromDateToDateAndStatusSuccess(request.getFromDate(), request.getToDate());
-        } else if (request.getStatus().equals(BillStatus.EXPIRATION)) {
-            dayReports = billRepository.findDashBoardBillByFromDateToDateAndStatusEx(request.getFromDate(), request.getToDate());
-        }
+        normalizeDashboardRequest(request);
+        Integer status = request.getStatus().ordinal();
+        Integer branchId = normalizeFilterId(request.getBranchId());
+        Integer movieId = normalizeFilterId(request.getMovieId());
+        List<DayTransactionReport> dayReports = billRepository.findDashboardBillByFilters(
+            request.getFromDate(),
+            request.getToDate(),
+            status,
+            branchId,
+            movieId
+        );
         GetDashboardTransactionResponse response = new GetDashboardTransactionResponse();
         response.setDayTransactionReports(dayReports);
         Long totalTicket = 0L;
@@ -190,7 +194,24 @@ public class BillService implements IBillService {
         response.setTotalIncome(totalIncome);
         if (!totalTicket.equals(0L)) {
             response.setTotalTicket(totalTicket);
+        } else {
+            response.setTotalTicket(0L);
         }
+        Double averageOccupancyRate = billRepository.findAverageOccupancyRateByFilters(
+            request.getFromDate(),
+            request.getToDate(),
+            status,
+            branchId,
+            movieId
+        );
+        response.setAverageOccupancyRate(averageOccupancyRate == null ? 0D : averageOccupancyRate);
+        response.setTopMovies(billRepository.findTopMoviesByFilters(
+            request.getFromDate(),
+            request.getToDate(),
+            status,
+            branchId,
+            movieId
+        ));
         return response;
     }
 
@@ -208,13 +229,16 @@ public class BillService implements IBillService {
     }
 
     @Override
-    public List<UserReportDto> getUserDashBoard(BillStatus status) {
-        List<UserReportDto> reports = new ArrayList<>();
-        if (status.equals(BillStatus.SUCCESS)) {
-            reports = billRepository.findAllByStatusSuccessGroupByUser();
-        } else if (status.equals(BillStatus.EXPIRATION)) {
-            reports = ModelMapperUtils.mapList(billRepository.findAllByStatusExGroupByUser(), UserReportDto.class);
-        }
+    public List<UserReportDto> getUserDashBoard(GetDashboardTransactionRequest request) {
+        normalizeDashboardRequest(request);
+        List<UserReportDto> reports = billRepository.findUserDashboardByFilters(
+            request.getFromDate(),
+            request.getToDate(),
+            request.getStatus().ordinal(),
+            normalizeFilterId(request.getBranchId()),
+            normalizeFilterId(request.getMovieId()),
+            request.getUserId() == null ? 0L : request.getUserId()
+        );
         reports.sort(new ValueComparator());
         return reports;
     }
@@ -229,9 +253,31 @@ public class BillService implements IBillService {
 
     @Override
     public List<BillDto> getList(GetDashboardTransactionRequest request) {
+        if (request.getBranchId() != null && request.getBranchId() == 0) {
+            request.setBranchId(null);
+        }
+        if (request.getMovieId() != null && request.getMovieId() == 0) {
+            request.setMovieId(null);
+        }
         List<Bill> listTrans = billRepository.findAll(request.getSpecification(), Sort.by(Bill.Fields.createdTime).descending());
         List<BillDto> alist = listTrans.stream().map(BillDto::new).collect(Collectors.toList());
         return alist;
+    }
+
+    private void normalizeDashboardRequest(GetDashboardTransactionRequest request) {
+        if (request.getStatus() == null) {
+            request.setStatus(BillStatus.SUCCESS);
+        }
+        if (request.getFromDate() == null || request.getFromDate().trim().isEmpty() || request.getFromDate().equalsIgnoreCase("undefined")) {
+            request.setFromDate(LocalDate.now().minusDays(30).toString());
+        }
+        if (request.getToDate() == null || request.getToDate().trim().isEmpty() || request.getToDate().equalsIgnoreCase("undefined")) {
+            request.setToDate(LocalDate.now().toString());
+        }
+    }
+
+    private Integer normalizeFilterId(Integer id) {
+        return id == null || id < 0 ? 0 : id;
     }
 
     @Override

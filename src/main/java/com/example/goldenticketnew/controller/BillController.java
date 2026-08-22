@@ -1,7 +1,6 @@
 package com.example.goldenticketnew.controller;
 
 import com.example.goldenticketnew.dtos.*;
-import com.example.goldenticketnew.enums.BillStatus;
 import com.example.goldenticketnew.payload.dashboard.GetDashboardTransactionRequest;
 import com.example.goldenticketnew.payload.dashboard.GetDashboardTransactionResponse;
 import com.example.goldenticketnew.payload.response.ResponseBase;
@@ -100,8 +99,8 @@ public class BillController {
         description = "- Lấy DashBoard User"
     )
     @GetMapping("/getUserDashBoard")
-    public ResponseEntity<List<UserReportDto>> getUserDashBoard(@Valid @Parameter BillStatus status) {
-        return new ResponseEntity<>(billService.getUserDashBoard(status), HttpStatus.OK);
+    public ResponseEntity<List<UserReportDto>> getUserDashBoard(@Valid @ParameterObject GetDashboardTransactionRequest request) {
+        return new ResponseEntity<>(billService.getUserDashBoard(request), HttpStatus.OK);
     }
 
     @Operation(

@@ -26,7 +26,7 @@ public interface IBillService {
 
     List<TransactionReportSuccess> getTranS(String dateTime);
 
-    List<UserReportDto> getUserDashBoard(BillStatus status);
+    List<UserReportDto> getUserDashBoard(GetDashboardTransactionRequest request);
 
     List<BillDto> getList(GetDashboardTransactionRequest request);
 }
