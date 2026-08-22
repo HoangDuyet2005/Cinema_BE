@@ -7,6 +7,7 @@ import com.example.goldenticketnew.exception.InternalException;
 import com.example.goldenticketnew.model.Branch;
 import com.example.goldenticketnew.payload.response.BranchResponse;
 import com.example.goldenticketnew.payload.response.PageResponse;
+import com.example.goldenticketnew.payload.resquest.BranchRequest;
 import com.example.goldenticketnew.payload.resquest.GetAllBranchRequest;
 import com.example.goldenticketnew.repository.IBranchRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,6 +47,20 @@ public class BranchService implements IBranchService {
     }
 
     @Override
+    public BranchResponse createBranch(BranchRequest request) {
+        Branch branch = new Branch();
+        applyBranchRequest(branch, request);
+        return new BranchResponse(branchRepository.save(branch));
+    }
+
+    @Override
+    public BranchResponse updateBranch(Integer id, BranchRequest request) {
+        Branch branch = branchRepository.findById(id).orElseThrow(() -> new InternalException(ResponseCode.BRANCH_NOT_FOUND));
+        applyBranchRequest(branch, request);
+        return new BranchResponse(branchRepository.save(branch));
+    }
+
+    @Override
     public List<String> getAllCities() {
         return branchRepository.findDistinctCities();
     }
@@ -59,5 +74,13 @@ public class BranchService implements IBranchService {
             branches = branchRepository.findByCityIgnoreCase(city.trim());
         }
         return branches.stream().map(BranchResponse::new).collect(Collectors.toList());
+    }
+
+    private void applyBranchRequest(Branch branch, BranchRequest request) {
+        branch.setName(request.getName());
+        branch.setCity(request.getCity());
+        branch.setAddress(request.getAddress());
+        branch.setPhoneNo(request.getPhoneNo());
+        branch.setImgURL(request.getImgURL());
     }
 }

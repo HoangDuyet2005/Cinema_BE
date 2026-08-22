@@ -2,25 +2,32 @@ package com.example.goldenticketnew.controller;
 
 import com.example.goldenticketnew.dtos.ArticleDto;
 import com.example.goldenticketnew.dtos.ArticleReportDto;
+import com.example.goldenticketnew.dtos.CategoryDto;
 import com.example.goldenticketnew.enums.ArticleStatus;
 import com.example.goldenticketnew.enums.ArticleType;
+import com.example.goldenticketnew.exception.BadRequestException;
+import com.example.goldenticketnew.model.Category;
 import com.example.goldenticketnew.payload.article.request.*;
 import com.example.goldenticketnew.payload.response.PageResponse;
 import com.example.goldenticketnew.payload.response.ResponseBase;
+import com.example.goldenticketnew.repository.ICategoryRepository;
 import com.example.goldenticketnew.security.CurrentUser;
 import com.example.goldenticketnew.security.UserPrincipal;
 import com.example.goldenticketnew.service.article.IArticleService;
+import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/article")
@@ -28,6 +35,7 @@ import java.util.List;
 @Tag(name = "Article Controller", description = "Thao tác với các bài đăng")
 public class ArticleController {
     private final IArticleService articleService;
+    private final ICategoryRepository categoryRepository;
 
     @Operation(
         summary = "Thêm mới Review của User ",
@@ -148,5 +156,53 @@ public ResponseEntity<ResponseBase<ArticleDto>> getDetailByTitle(@PathVariable S
     @GetMapping("/user/checkSaveArticle")
     public ResponseEntity<ResponseBase<Boolean>> checkSaveArticle(@Parameter Long userId, @Parameter Long articleId) {
         return ResponseEntity.ok(new ResponseBase<>(articleService.checkSaveArticle(userId, articleId)));
+    }
+
+    @Operation(
+        summary = "Get All Category",
+        description = "- Get all article categories for admin"
+    )
+    @GetMapping("/category/getAll")
+    public ResponseEntity<ResponseBase<List<CategoryDto>>> getAllCategory() {
+        List<CategoryDto> categories = categoryRepository.findAll()
+            .stream()
+            .map(CategoryDto::new)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(new ResponseBase<>(categories));
+    }
+
+    @Operation(
+        summary = "Add Category",
+        description = "- Add article category for admin"
+    )
+    @PostMapping("/category/add")
+    public ResponseEntity<ResponseBase<CategoryDto>> addCategory(@RequestBody JsonNode request) {
+        String name = extractCategoryName(request);
+        if (name == null || name.trim().isEmpty()) {
+            throw new BadRequestException("Category name must not be empty");
+        }
+        name = name.trim();
+        if (categoryRepository.existsByNameIgnoreCase(name)) {
+            throw new BadRequestException("Category name already exists");
+        }
+        Category category = new Category();
+        category.setName(name);
+        return new ResponseEntity<>(new ResponseBase<>(new CategoryDto(categoryRepository.save(category))), HttpStatus.CREATED);
+    }
+
+    private String extractCategoryName(JsonNode request) {
+        if (request == null || request.isNull()) {
+            return null;
+        }
+        if (request.isTextual()) {
+            return request.asText();
+        }
+        if (request.hasNonNull("name")) {
+            return request.get("name").asText();
+        }
+        if (request.hasNonNull("categoryName")) {
+            return request.get("categoryName").asText();
+        }
+        return null;
     }
 }

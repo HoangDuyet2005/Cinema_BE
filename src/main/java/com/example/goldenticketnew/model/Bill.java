@@ -12,6 +12,7 @@ import org.springframework.data.annotation.CreatedDate;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -43,6 +44,9 @@ public class Bill extends UserDateAudit {
 
     @Column(name = "qr_code", length = 1000)
     private String qrCode;
+
+    @OneToMany(mappedBy = "bill")
+    private List<Ticket> tickets;
 
     public Boolean getIsCheckedIn() {
         return isCheckedIn != null ? isCheckedIn : false;

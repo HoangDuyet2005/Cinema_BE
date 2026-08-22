@@ -5,6 +5,7 @@ import com.example.goldenticketnew.dtos.BranchDto;
 import com.example.goldenticketnew.payload.response.BranchResponse;
 import com.example.goldenticketnew.payload.response.PageResponse;
 import com.example.goldenticketnew.payload.response.ResponseBase;
+import com.example.goldenticketnew.payload.resquest.BranchRequest;
 import com.example.goldenticketnew.payload.resquest.GetAllBranchRequest;
 import com.example.goldenticketnew.service.branch.IBranchService;
 
@@ -18,6 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -58,6 +60,24 @@ public class BranchController {
     @GetMapping("/getDetail")
     public ResponseEntity<ResponseBase<BranchResponse>> getBranchDetail( @Parameter Integer id) {
         return new ResponseEntity<>(new ResponseBase<>(branchService.getBranch(id)), HttpStatus.OK);
+    }
+
+    @Operation(
+        summary = "Create Branch",
+        description = "- Them moi chi nhanh rap"
+    )
+    @PostMapping("/create")
+    public ResponseEntity<ResponseBase<BranchResponse>> createBranch(@Valid @RequestBody BranchRequest request) {
+        return new ResponseEntity<>(new ResponseBase<>(branchService.createBranch(request)), HttpStatus.CREATED);
+    }
+
+    @Operation(
+        summary = "Update Branch",
+        description = "- Cap nhat chi nhanh rap"
+    )
+    @PutMapping("/update/{id}")
+    public ResponseEntity<ResponseBase<BranchResponse>> updateBranch(@PathVariable Integer id, @Valid @RequestBody BranchRequest request) {
+        return ResponseEntity.ok(new ResponseBase<>(branchService.updateBranch(id, request)));
     }
 
     @Operation(
