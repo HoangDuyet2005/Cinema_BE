@@ -57,17 +57,16 @@ public class GetDashboardTransactionRequest {
             if (userId != null) {
                 predicates.add(cb.equal(root.get(Bill.Fields.user).get(User.Fields.id),userId));
             }
-            Join<Ticket, Schedule> scheduleJoin = null;
             if ((branchId != null && branchId > 0) || (movieId != null && movieId > 0)) {
                 query.distinct(true);
                 Join<Bill, Ticket> ticketJoin = root.join("tickets", JoinType.INNER);
-                scheduleJoin = ticketJoin.join("schedule", JoinType.INNER);
-            }
-            if (branchId != null && branchId > 0) {
-                predicates.add(cb.equal(scheduleJoin.get(Schedule.Fields.branch).get("id"), branchId));
-            }
-            if (movieId != null && movieId > 0) {
-                predicates.add(cb.equal(scheduleJoin.get(Schedule.Fields.movie).get("id"), movieId));
+                Join<Ticket, Schedule> scheduleJoin = ticketJoin.join("schedule", JoinType.INNER);
+                if (branchId != null && branchId > 0) {
+                    predicates.add(cb.equal(scheduleJoin.get(Schedule.Fields.branch).get("id"), branchId));
+                }
+                if (movieId != null && movieId > 0) {
+                    predicates.add(cb.equal(scheduleJoin.get(Schedule.Fields.movie).get("id"), movieId));
+                }
             }
             return cb.and(predicates.toArray(new Predicate[predicates.size()]));
         };

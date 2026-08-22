@@ -1,7 +1,6 @@
 package com.example.goldenticketnew.service.bill;
 
 import com.example.goldenticketnew.dtos.*;
-import com.example.goldenticketnew.enums.BillStatus;
 import com.example.goldenticketnew.payload.dashboard.GetDashboardTransactionRequest;
 import com.example.goldenticketnew.payload.dashboard.GetDashboardTransactionResponse;
 
