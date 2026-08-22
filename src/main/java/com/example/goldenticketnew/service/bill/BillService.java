@@ -248,7 +248,17 @@ public class BillService implements IBillService {
         Bill bill = billRepository.findById(id).orElseThrow(() -> new InternalException(ResponseCode.BILL_NOT_FOUND));
         List<Ticket> tickets = ticketRepository.findTicketsByBillId(id);
         List<BillFood> billFoods = billFoodRepository.findByBillId(id);
-        return new BillDetailDto(bill, tickets, billFoods);
+        BillDetailDto billDetailDto = new BillDetailDto(bill, tickets, billFoods);
+        if (tickets != null && !tickets.isEmpty()) {
+            for (int i = 0; i < tickets.size(); i++) {
+                Ticket t = tickets.get(i);
+                if (i < billDetailDto.getSeats().size() && t.getSchedule() != null && t.getSeat() != null) {
+                    double seatPrice = priceCalculationService.calculateSeatPrice(t.getSchedule(), t.getSeat());
+                    billDetailDto.getSeats().get(i).setPrice(seatPrice);
+                }
+            }
+        }
+        return billDetailDto;
     }
 
     @Override
