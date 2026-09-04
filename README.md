@@ -17,15 +17,13 @@ Hệ thống Backend quản lý rạp chiếu phim, đặt vé xem phim online, 
    ```sql
    CREATE DATABASE IF NOT EXISTS cinema2 CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
    ```
-3. Import toàn bộ cấu trúc bảng và dữ liệu mẫu từ file dump có sẵn trong thư mục `database/`:
-   ```bash
-   # Cách 1: Sử dụng dòng lệnh MySQL (CMD/Terminal)
-   mysql -u root -p cinema2 < database/cinema2_database_dump.sql
-
-   # Cách 2: Sử dụng MySQL Workbench
-   # Server -> Data Import -> Import from Self-Contained File -> Chọn database/cinema2_database_dump.sql -> Start Import
-   ```
-4. Kiểm tra cấu hình kết nối DB trong file `src/main/resources/application.properties`:
+3. `spring.jpa.hibernate.ddl-auto=update` sẽ tự tạo bảng khi chạy lần đầu. File dump dữ liệu thật trước đây
+   đã bị gỡ khỏi repo (chứa email/mật khẩu hash thật của người dùng - không nên public); nếu cần dữ liệu mẫu
+   để test, hãy tự tạo tài khoản qua `/api/auth/signup` và nhập phim/lịch chiếu qua Swagger, hoặc tự export
+   một bản dump **đã ẩn danh** từ máy của bạn rồi lưu riêng (không commit lên git).
+4. Sao chép `src/main/resources/application.properties.example` thành `src/main/resources/application.properties`
+   rồi điền giá trị thật của bạn (DB, `app.jwtSecret`, `vnpay.*`...). File `application.properties` đã được
+   `.gitignore`, không commit lên git.
    ```properties
    spring.datasource.url=jdbc:mysql://localhost:3306/cinema2?serverTimezone=Asia/Ho_Chi_Minh&useSSL=false&allowPublicKeyRetrieval=true
    spring.datasource.username=root
@@ -51,7 +49,7 @@ Sau khi khởi chạy thành công:
 
 ---
 
-## 🔑 Tài khoản mẫu mặc định
-- **Admin**: `admin` / `123456`
-- **Staff (Nhân viên)**: `staff` / `123456`
-- **Khách hàng**: `duyetht` / mật khẩu cá nhân
+## 🔑 Tài khoản mẫu
+Tự tạo tài khoản admin/staff/khách hàng qua `/api/auth/signup` (khách) và `/api/auth/registerStaff`
+(cần đăng nhập bằng tài khoản ADMIN có sẵn) sau khi khởi tạo dữ liệu lần đầu. Không commit tài khoản/mật khẩu
+thật vào README hay bất kỳ file nào trong repo.

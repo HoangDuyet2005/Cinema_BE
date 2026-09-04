@@ -3,7 +3,7 @@ package com.example.goldenticketnew.config;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
-import java.util.Random;
+import java.security.SecureRandom;
 
 public class VNPayConfig {
 
@@ -30,7 +30,7 @@ public class VNPayConfig {
     }
 
     public static String getRandomNumber(int len) {
-        Random rnd = new Random();
+        SecureRandom rnd = new SecureRandom(); // SecureRandom thay vì Random - mã giao dịch không nên đoán được
         String chars = "0123456789";
         StringBuilder sb = new StringBuilder(len);
         for (int i = 0; i < len; i++) {

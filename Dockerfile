@@ -1,4 +1,4 @@
-FROM adoptopenjdk/openjdk11:jdk-11.0.14.1_1-alpine-slim
+FROM eclipse-temurin:17-jre-alpine
 
 EXPOSE 8080
 

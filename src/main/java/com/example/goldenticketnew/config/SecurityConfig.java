@@ -84,10 +84,23 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             ).permitAll()
             .antMatchers("/api/user/checkUsernameAvailability", "/api/user/checkEmailAvailability")
             .permitAll()
-//            .antMatchers(HttpMethod.GET, "/api/article/**", "/api/movies/**", "/api/tickets/**", "/api/schedule/**", "/api/bills/**", "/api/rooms/**", "/api/seats/**", "/api/branches/**", "/api/movies/**", "/api/user/**")
-//            .permitAll()
-            .antMatchers("/api/concessions/**", "/api/theaters/**", "/api/article/**","/api/interaction/**", "/api/movies/**", "/api/tickets/**", "/api/schedule/**", "/api/bills/**", "/api/rooms/**", "/api/seats/**", "/api/branches/**", "/api/movies/**", "/api/user/**")
+            // Chỉ các API ĐỌC (GET) mang tính công khai (danh mục phim, lịch chiếu, rạp, ghế...)
+            // mới được permitAll. Mọi thao tác ghi (POST/PUT/DELETE) trên các resource này
+            // đều rơi xuống .anyRequest().authenticated() bên dưới và bắt buộc phải có JWT hợp lệ.
+            // (Trước đây permitAll không giới hạn method khiến toàn bộ POST/PUT/DELETE của các
+            // API này bị public hoàn toàn - xem báo cáo audit để biết chi tiết lỗ hổng đã vá.)
+            .antMatchers(HttpMethod.GET,
+                "/api/concessions/**", "/api/theaters/**", "/api/article/**", "/api/interaction/**",
+                "/api/movies/**", "/api/schedule/**", "/api/rooms/**", "/api/seats/**", "/api/branches/**",
+                "/api/user/**"
+            )
             .permitAll()
+            .antMatchers(HttpMethod.GET, "/api/bills/check-ticket")
+            .permitAll()
+            // /api/tickets/** và mọi method khác (POST/PUT/DELETE) trên các resource ở trên
+            // (bao gồm /api/bills/**, /api/user/**...) bắt buộc phải authenticated - các endpoint
+            // nội bộ/admin (dashboard, xoá, cập nhật...) tự bảo vệ thêm bằng @PreAuthorize ở
+            // controller/service tương ứng.
             .anyRequest()
             .authenticated();
 

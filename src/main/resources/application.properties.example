@@ -1,0 +1,43 @@
+# Sao chép file này thành application.properties (cùng thư mục) và điền giá trị thật của bạn.
+# application.properties đã được .gitignore - KHÔNG bao giờ commit file chứa giá trị thật lên git.
+
+# ===== Database (MySQL) =====
+spring.datasource.url=jdbc:mysql://localhost:3306/cinema2?serverTimezone=Asia/Ho_Chi_Minh&useSSL=false&allowPublicKeyRetrieval=true
+spring.datasource.username=root
+spring.datasource.password=CHANGE_ME
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=false
+
+# ===== JWT =====
+# Sinh một chuỗi ngẫu nhiên đủ dài (>= 64 ký tự) cho riêng môi trường của bạn, KHÔNG dùng lại giá trị mẫu
+# nào đã từng xuất hiện trong lịch sử git/README. Có thể sinh nhanh bằng:
+#   openssl rand -hex 64
+app.jwtSecret=CHANGE_ME_GENERATE_A_RANDOM_SECRET
+app.jwtExpirationInMs=86400000
+
+# ===== Swagger =====
+swagger.server-url=http://localhost:8080
+
+# ===== VNPay Sandbox (đăng ký tại https://sandbox.vnpayment.vn) =====
+vnpay.tmnCode=CHANGE_ME
+vnpay.hashSecret=CHANGE_ME
+vnpay.payUrl=https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+vnpay.returnUrl=http://localhost:3000/payment-result
+
+# ===== Cadence Workflow (tùy chọn - chỉ cần khi bật cadence.enabled=true) =====
+cadence.enabled=false
+#cadence.host=localhost
+#cadence.port=7933
+#cadence.domain=default
+#cadence.retry.workflow.execution-start-to-close-timeout=30
+#cadence.retry.workflow.medium-execution-start-to-close-timeout=120
+#cadence.retry.workflow.activity.schedule-to-close-timeout=30
+#cadence.retry.workflow.activity.initial-interval=1
+#cadence.retry.workflow.activity.expiration=30
+#cadence.retry.workflow.activity.maximum-attempts=3
+#cadence.workerfactory.max-workflow-thread-count=50
+#cadence.workerfactory.sticky-cache-size=10000
+#cadence.workerfactory.disable-sticky-execution=false
+#cadence.worker.max-concurrent-activity-execution-size=200
+#cadence.worker.max-concurrent-workflow-execution-size=200
+#cadence.worker.disabled=

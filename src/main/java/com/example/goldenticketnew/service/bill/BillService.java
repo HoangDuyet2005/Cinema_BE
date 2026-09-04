@@ -79,7 +79,9 @@ public class BillService implements IBillService {
         billToCreate.setStatus(BillStatus.SUCCESS);
         billToCreate.setPrice(total[0]);
         billToCreate.setIsCheckedIn(false);
-        String bookingCode = "WC" + LocalDate.now().getYear() + "-" + String.format("%06d", (int)(Math.random() * 900000 + 100000));
+        // SecureRandom (qua VNPayConfig.getRandomNumber) thay vì Math.random() vì bookingCode
+        // dùng làm mã QR/soát vé - không nên đoán được.
+        String bookingCode = "WC" + LocalDate.now().getYear() + "-" + com.example.goldenticketnew.config.VNPayConfig.getRandomNumber(6);
         billToCreate.setBookingCode(bookingCode);
         billToCreate.setQrCode(bookingCode);
         Bill createdBill = billRepository.save(billToCreate);
@@ -105,7 +107,9 @@ public class BillService implements IBillService {
                         billFood.setBill(createdBill);
                         billFood.setFoodItem(foodItem);
                         billFood.setQuantity(foodReq.getQuantity());
-                        double itemPrice = foodReq.getPrice() != null ? foodReq.getPrice() : (foodItem.getPrice() != null ? foodItem.getPrice() : 0.0);
+                        // Luôn lấy giá thật từ FoodItem trong DB, KHÔNG dùng foodReq.getPrice() do client tự gửi
+                        // (trước đây cho phép client tự đặt giá bắp nước tuỳ ý - lỗ hổng tamper giá).
+                        double itemPrice = foodItem.getPrice() != null ? foodItem.getPrice() : 0.0;
                         billFood.setPrice(itemPrice);
                         billFoodRepository.save(billFood);
                         total[0] += itemPrice * foodReq.getQuantity();

@@ -9,7 +9,7 @@ jobs:
       DOCKER_IMAGE: goldenticketnew
       DOCKER_TAG: latest
     docker:
-      - image: cimg/openjdk:11.0.13
+      - image: cimg/openjdk:17.0.8
     steps:
       - checkout
       - setup_remote_docker

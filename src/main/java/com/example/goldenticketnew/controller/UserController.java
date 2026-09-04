@@ -84,11 +84,13 @@ public class UserController {
     //Edit user
     @Operation(
         summary = "Chỉnh sửa thông tin User",
-        description = "- Chỉnh sửa thông tin User"
+        description = "- Chỉnh sửa thông tin của chính user đang đăng nhập (id trong request bị bỏ qua để tránh IDOR)"
     )
     @PutMapping("/updateInfo")
-    public ResponseEntity<ResponseBase<UserDto>>  updateInfoUser(@RequestBody UpdateUserRequest request) {
-        return ResponseEntity.ok(new ResponseBase<>(userService.updateInfoUser(request)));
+    public ResponseEntity<ResponseBase<UserDto>>  updateInfoUser(@CurrentUser UserPrincipal currentUser, @RequestBody UpdateUserRequest request) {
+        // Luôn cập nhật theo id của user đang đăng nhập, KHÔNG dùng request.getId() do client tự gửi
+        // (trước đây cho phép sửa thông tin của bất kỳ user nào chỉ cần biết id - đã vá).
+        return ResponseEntity.ok(new ResponseBase<>(userService.updateInfoUser(currentUser.getId(), request)));
     }
 
     @Operation(
@@ -110,8 +112,7 @@ public class UserController {
         description = "- Get toàn bộ user đang xin quyền viết bài"
     )
     @GetMapping("/contenCreator/waiting/getAll")
-//    @PreAuthorize("hasRole('ADMIN')")
-//
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ResponseBase<PageResponse<UserDto>>> getAllUserWaiting( @ParameterObject Pageable pageable, @ParameterObject GetAllUserRequest request) {
 request.setPageable(pageable);
         return ResponseEntity.ok(new ResponseBase<>(userService.getListUserIsWaiting(request)));
@@ -122,6 +123,7 @@ request.setPageable(pageable);
         description = "- Get dashboard user"
     )
     @GetMapping("/dashBoard")
+    @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
     public ResponseEntity<ResponseBase<List<UserDto>>> getUserReport(@Parameter String dateTime) {
         return ResponseEntity.ok(new ResponseBase<>(userService.getUserReport(dateTime)));
     }

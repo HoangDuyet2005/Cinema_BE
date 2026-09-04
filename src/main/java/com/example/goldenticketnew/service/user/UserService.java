@@ -89,8 +89,10 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public UserDto updateInfoUser(UpdateUserRequest request) {
-        User user = userRepository.findById(request.getId()).orElseThrow(() -> new InternalException(ResponseCode.USER_NOT_FOUND));
+    public UserDto updateInfoUser(Long currentUserId, UpdateUserRequest request) {
+        // currentUserId đến từ JWT của người đang đăng nhập, không dùng request.getId() (client tự gửi)
+        // để tránh cho phép sửa thông tin của user khác (IDOR).
+        User user = userRepository.findById(currentUserId).orElseThrow(() -> new InternalException(ResponseCode.USER_NOT_FOUND));
         if(request.getName() != null) user.setName(request.getName());
         if(request.getImage() != null)  user.setImage(request.getImage());
         if(request.getBio() != null) user.setBio(request.getBio());

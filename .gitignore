@@ -27,6 +27,10 @@ node_modules/
 # Sensitive Spring config
 src/main/resources/application.properties
 
+# Database dump chứa dữ liệu thật (email, mật khẩu hash...) - không commit lên git,
+# tự export bản dump riêng của bạn nếu cần và giữ ở máy local.
+database/*.sql
+
 # Logs
 *.log
 
