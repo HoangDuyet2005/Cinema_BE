@@ -3,9 +3,11 @@ package com.example.goldenticketnew.controller;
 import com.example.goldenticketnew.dtos.SeatDto;
 import com.example.goldenticketnew.dtos.SeatRealtimeMessage;
 import com.example.goldenticketnew.enums.BillStatus;
+import com.example.goldenticketnew.model.Schedule;
 import com.example.goldenticketnew.model.Seat;
 import com.example.goldenticketnew.model.Ticket;
 import com.example.goldenticketnew.payload.response.ResponseBase;
+import com.example.goldenticketnew.repository.IScheduleRepository;
 import com.example.goldenticketnew.repository.ISeatRepository;
 import com.example.goldenticketnew.repository.TicketRepository;
 import com.example.goldenticketnew.service.seat.ISeatService;
@@ -18,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @RestController
@@ -33,6 +36,7 @@ public class SeatController {
     private final SimpMessagingTemplate messagingTemplate;
     private final TicketRepository ticketRepository;
     private final ISeatRepository seatRepository;
+    private final IScheduleRepository scheduleRepository;
 
     @GetMapping
     public ResponseEntity<ResponseBase<List<SeatDto>>> getSeatsByScheduleId(@RequestParam Integer scheduleId){
@@ -61,6 +65,15 @@ public class SeatController {
     public ResponseEntity<?> holdSeats(@RequestBody HoldSeatsRequest request) {
         if (request.getScheduleId() == null || request.getSeatIds() == null || request.getSeatIds().isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Dữ liệu không hợp lệ"));
+        }
+
+        if (request.getSeatIds().size() > 10) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Mỗi lần đặt tối đa 10 ghế"));
+        }
+
+        Schedule schedule = scheduleRepository.findById(request.getScheduleId()).orElse(null);
+        if (schedule == null || schedule.hasStartedAt(LocalDateTime.now())) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", "Suất chiếu đã bắt đầu hoặc không tồn tại, không thể giữ ghế"));
         }
 
         Integer userId = request.getUserId() != null ? request.getUserId() : 1;

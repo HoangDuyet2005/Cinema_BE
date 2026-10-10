@@ -33,6 +33,10 @@ public class Bill extends UserDateAudit {
     private BillStatus status;
     private Double price;
 
+    // Mã giao dịch VNPay (vnp_TxnRef) đã dùng để xuất vé - unique để 1 giao dịch không xuất vé được 2 lần
+    @Column(name = "payment_ref", unique = true)
+    private String paymentRef;
+
     @Column(name = "booking_code", unique = true)
     private String bookingCode;
 

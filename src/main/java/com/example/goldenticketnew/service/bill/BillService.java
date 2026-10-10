@@ -10,6 +10,7 @@ import com.example.goldenticketnew.payload.dashboard.GetDashboardTransactionRequ
 import com.example.goldenticketnew.payload.dashboard.GetDashboardTransactionResponse;
 import com.example.goldenticketnew.repository.*;
 import com.example.goldenticketnew.utils.ValueComparator;
+import com.example.goldenticketnew.service.payment.VnPayService;
 import com.example.goldenticketnew.service.pricing.PriceCalculationService;
 import com.example.goldenticketnew.workflow.interfaces.IBookingTicketWorkflow;
 import com.uber.cadence.client.WorkflowClient;
@@ -23,8 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,6 +39,7 @@ public class BillService implements IBillService {
     private final IFoodItemRepository foodItemRepository;
     private final IBillFoodRepository billFoodRepository;
     private final PriceCalculationService priceCalculationService;
+    private final VnPayService vnPayService;
 
     // Cadence là tuỳ chọn: các bean này chỉ tồn tại khi cadence.enabled=true. Inject bắt buộc qua
     // constructor khiến app không khởi động được khi tắt Cadence, dù đặt vé không cần workflow.
@@ -48,17 +49,28 @@ public class BillService implements IBillService {
     private CadenceWorkflowConfig cadenceWorkflowConfig;
 
     public static final String workFlowId = "BOOKING_TASK_ID";
+    private static final long PAYMENT_GRACE_MINUTES = 20;
+    private static final int MAX_SEATS_PER_BOOKING = 10;
 
     @Override
     @Transactional
     public BillDto createNewBill(BookingRequestDto bookingRequestDTO) {
         Schedule schedule = scheduleRepository.findById(bookingRequestDTO.getScheduleId())
                 .orElseThrow(() -> new InternalException(ResponseCode.SCHEDULE_NOT_FOUND));
+        // Giữ ghế và tạo link thanh toán đã chặn đúng giờ chiếu. Ở bước này cho phép trễ tối đa
+        // PAYMENT_GRACE_MINUTES vì với VNPay, hóa đơn chỉ được tạo SAU khi khách đã trả tiền
+        // (link thanh toán sống 15 phút) - chặn cứng sẽ khiến khách mất tiền mà không có vé.
+        if (schedule.hasStartedAt(LocalDateTime.now().minusMinutes(PAYMENT_GRACE_MINUTES))) {
+            throw new InternalException(ResponseCode.SCHEDULE_ALREADY_STARTED);
+        }
         User user = userRepository.findById(bookingRequestDTO.getUserId())
                 .orElseThrow(() -> new InternalException(ResponseCode.USER_NOT_FOUND));
 
         if (bookingRequestDTO.getListSeatIds() == null || bookingRequestDTO.getListSeatIds().isEmpty()) {
             throw new InternalException(ResponseCode.SEAT_NOT_FOUND);
+        }
+        if (bookingRequestDTO.getListSeatIds().size() > MAX_SEATS_PER_BOOKING) {
+            throw new InternalException(ResponseCode.BOOKING_SEAT_LIMIT);
         }
 
         final double[] total = {0};
@@ -127,7 +139,46 @@ public class BillService implements IBillService {
             billRepository.save(createdBill);
         }
 
+        // Khách tự đặt: chỉ xuất vé khi có bằng chứng đã thanh toán. Ném lỗi ở đây sẽ rollback toàn bộ
+        // bill/vé/bắp nước vừa tạo (cùng transaction của bookingHandler).
+        if (bookingRequestDTO.isPaymentRequired()) {
+            createdBill.setPaymentRef(verifyPaidBooking(bookingRequestDTO, total[0]));
+            billRepository.save(createdBill);
+        }
+
         return new BillDto(createdBill);
+    }
+
+    /**
+     * Xác minh giao dịch VNPay đúng là đã thanh toán cho CHÍNH đơn này, trả về mã giao dịch.
+     * Trước đây bill được tạo thẳng với trạng thái SUCCESS mà không cần thanh toán -> khách gọi thẳng
+     * API là lấy được vé miễn phí.
+     */
+    private String verifyPaidBooking(BookingRequestDto dto, double total) {
+        Map<String, String> proof = dto.getPaymentProof();
+        if (!vnPayService.isPaidSuccessfully(proof)) {
+            throw new InternalException(ResponseCode.PAYMENT_INVALID);
+        }
+        // Số tiền đã trả phải bằng đúng giá trị đơn do server tự tính lại (VNPay tính theo đơn vị x100)
+        if (!String.valueOf(Math.round(total) * 100).equals(proof.get("vnp_Amount"))) {
+            throw new InternalException(ResponseCode.PAYMENT_INVALID);
+        }
+        // Giao dịch phải là của đúng người, đúng suất, đúng ghế: vnp_OrderInfo = PAY_{user}_{suất}_{ghế-ghế}[_...]
+        String[] parts = String.valueOf(proof.get("vnp_OrderInfo")).split("_");
+        Set<String> paidSeats = parts.length > 3 ? new HashSet<>(Arrays.asList(parts[3].split("-"))) : Collections.emptySet();
+        Set<String> bookedSeats = dto.getListSeatIds().stream().map(String::valueOf).collect(Collectors.toSet());
+        if (parts.length < 4 || !"PAY".equals(parts[0])
+                || !parts[1].equals(String.valueOf(dto.getUserId()))
+                || !parts[2].equals(String.valueOf(dto.getScheduleId()))
+                || !paidSeats.equals(bookedSeats)) {
+            throw new InternalException(ResponseCode.PAYMENT_INVALID);
+        }
+        // Mỗi giao dịch chỉ được dùng xuất vé 1 lần (cột payment_ref còn có ràng buộc unique ở DB)
+        String paymentRef = proof.get("vnp_TxnRef");
+        if (paymentRef == null || billRepository.existsByPaymentRef(paymentRef)) {
+            throw new InternalException(ResponseCode.PAYMENT_ALREADY_USED);
+        }
+        return paymentRef;
     }
 
     @Override
@@ -341,7 +392,34 @@ public class BillService implements IBillService {
             return new CheckTicketResponseDto("ALREADY_CHECKED_IN", "Vé này đã được nhận / in trước đó vào lúc " + checkInStr + "!", detail);
         }
 
+        String[] showtimeProblem = showtimeProblem(bill.getId());
+        if (showtimeProblem != null) {
+            return new CheckTicketResponseDto(showtimeProblem[0], showtimeProblem[1], detail);
+        }
+
         return new CheckTicketResponseDto("VALID", "Mã vé hợp lệ! Đơn đặt vé đã sẵn sàng để in vé.", detail);
+    }
+
+    /**
+     * Vé chỉ được soát/in trong ngày của suất chiếu và trước khi suất kết thúc (như CGV).
+     * Trả về {trạng thái, thông báo} nếu không hợp lệ, null nếu hợp lệ.
+     */
+    private String[] showtimeProblem(Integer billId) {
+        Schedule schedule = ticketRepository.findTicketsByBillId(billId).stream()
+                .map(Ticket::getSchedule).filter(Objects::nonNull).findFirst().orElse(null);
+        if (schedule == null || schedule.getStartDate() == null || schedule.getStartTime() == null) {
+            return null;
+        }
+        LocalDateTime start = LocalDateTime.of(schedule.getStartDate(), schedule.getStartTime());
+        String showtime = start.format(DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy"));
+        if (schedule.getStartDate().isAfter(LocalDate.now())) {
+            return new String[]{"NOT_TODAY", "Vé dành cho suất " + showtime + ", chưa đến ngày chiếu!"};
+        }
+        int duration = schedule.getMovie() != null ? schedule.getMovie().getDuration() : 0;
+        if (LocalDateTime.now().isAfter(start.plusMinutes(duration))) {
+            return new String[]{"SHOW_ENDED", "Vé dành cho suất " + showtime + ", suất chiếu đã kết thúc!"};
+        }
+        return null;
     }
 
     @Override
@@ -349,6 +427,11 @@ public class BillService implements IBillService {
     public BillDetailDto confirmCheckIn(Integer billId) {
         Bill bill = billRepository.findById(billId)
                 .orElseThrow(() -> new InternalException(ResponseCode.BILL_NOT_FOUND));
+        // Trước đây xác nhận in vé không kiểm tra gì: in được vé chưa thanh toán, in nhiều lần, sai ngày
+        if (bill.getStatus() != BillStatus.SUCCESS || Boolean.TRUE.equals(bill.getIsCheckedIn())
+                || showtimeProblem(billId) != null) {
+            throw new InternalException(ResponseCode.CHECKIN_NOT_ALLOWED);
+        }
 
         bill.setIsCheckedIn(true);
         bill.setCheckInTime(LocalDateTime.now());

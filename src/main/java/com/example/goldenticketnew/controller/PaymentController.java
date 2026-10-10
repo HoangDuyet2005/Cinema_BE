@@ -1,6 +1,7 @@
 package com.example.goldenticketnew.controller;
 
 import com.example.goldenticketnew.config.VNPayConfig;
+import com.example.goldenticketnew.enums.BillStatus;
 import com.example.goldenticketnew.enums.ResponseCode;
 import com.example.goldenticketnew.exception.InternalException;
 import com.example.goldenticketnew.model.Bill;
@@ -11,9 +12,12 @@ import com.example.goldenticketnew.repository.IBillRepository;
 import com.example.goldenticketnew.repository.IFoodItemRepository;
 import com.example.goldenticketnew.repository.IScheduleRepository;
 import com.example.goldenticketnew.repository.ISeatRepository;
+import com.example.goldenticketnew.repository.TicketRepository;
 import com.example.goldenticketnew.security.CurrentUser;
 import com.example.goldenticketnew.security.UserPrincipal;
+import com.example.goldenticketnew.service.payment.VnPayService;
 import com.example.goldenticketnew.service.pricing.PriceCalculationService;
+import com.example.goldenticketnew.service.seat.SeatRealtimeManager;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @RestController
@@ -38,6 +43,13 @@ public class PaymentController {
     private final ISeatRepository seatRepository;
     private final IFoodItemRepository foodItemRepository;
     private final PriceCalculationService priceCalculationService;
+    private final VnPayService vnPayService;
+    private final TicketRepository ticketRepository;
+    private final SeatRealtimeManager seatRealtimeManager;
+
+    // Ghế được giữ cho khách suốt thời gian thanh toán: link VNPay sống 15 phút + dự phòng
+    private static final int PAYMENT_HOLD_MINUTES = 20;
+    private static final int MAX_SEATS_PER_BOOKING = 10;
 
     @Value("${vnpay.tmnCode}")
     private String vnp_TmnCode;
@@ -77,6 +89,10 @@ public class PaymentController {
             if (!isStaffOrAdmin && (bill.getUser() == null || bill.getUser().getId() != currentUser.getId())) {
                 throw new AccessDeniedException("Không có quyền thanh toán hóa đơn này");
             }
+            if (bill.getTickets() != null && bill.getTickets().stream()
+                    .anyMatch(t -> t.getSchedule() != null && t.getSchedule().hasStartedAt(LocalDateTime.now()))) {
+                throw new InternalException(ResponseCode.SCHEDULE_ALREADY_STARTED);
+            }
             amount = Math.round(bill.getPrice() != null ? bill.getPrice() : 0);
         } else {
             // Đặt vé lần đầu: chưa có bill, server tự tính lại tổng tiền từ dữ liệu thật trong DB,
@@ -86,6 +102,23 @@ public class PaymentController {
             }
             Schedule schedule = scheduleRepository.findById(scheduleId)
                     .orElseThrow(() -> new InternalException(ResponseCode.SCHEDULE_NOT_FOUND));
+            if (schedule.hasStartedAt(LocalDateTime.now())) {
+                throw new InternalException(ResponseCode.SCHEDULE_ALREADY_STARTED);
+            }
+            if (listSeatIds.size() > MAX_SEATS_PER_BOOKING) {
+                throw new InternalException(ResponseCode.BOOKING_SEAT_LIMIT);
+            }
+            // Chỉ cho thanh toán khi ghế còn trống: chưa ai mua và không bị người khác giữ.
+            // Trước đây không kiểm tra -> khách có thể trả tiền xong mới biết ghế đã bán (mất tiền, không có vé).
+            Integer holderId = Math.toIntExact(currentUser.getId());
+            for (Integer seatId : listSeatIds) {
+                boolean sold = ticketRepository.findTicketsBySchedule_IdAndSeat_Id(scheduleId, seatId).stream()
+                        .anyMatch(t -> t.getBill() != null && t.getBill().getStatus() == BillStatus.SUCCESS);
+                Integer holding = seatRealtimeManager.getHoldingUserId(scheduleId, seatId);
+                if (sold || (!isStaffOrAdmin && holding != null && !holding.equals(holderId))) {
+                    throw new InternalException(ResponseCode.BOOKING_SEAT_EXIST);
+                }
+            }
             double total = 0;
             for (Integer seatId : listSeatIds) {
                 Seat seat = seatRepository.findFirstById(seatId);
@@ -104,6 +137,11 @@ public class PaymentController {
                 }
             }
             amount = Math.round(total);
+            // Giữ ghế cho khách suốt thời gian thanh toán (trước đây chỉ 5 phút trong khi link VNPay sống
+            // 15 phút -> ghế có thể bị người khác lấy trong lúc khách đang trả tiền)
+            for (Integer seatId : listSeatIds) {
+                seatRealtimeManager.holdSeat(scheduleId, seatId, holderId, null, PAYMENT_HOLD_MINUTES);
+            }
         }
 
         String vnp_Version = "2.1.0";
@@ -175,28 +213,9 @@ public class PaymentController {
     )
     @GetMapping("/verify-return")
     public Map<String, Object> verifyReturn(@RequestParam Map<String, String> allParams) {
-        Map<String, String> fields = new HashMap<>(allParams);
-        String receivedHash = fields.remove("vnp_SecureHash");
-        fields.remove("vnp_SecureHashType");
-
-        List<String> fieldNames = new ArrayList<>(fields.keySet());
-        Collections.sort(fieldNames);
-        StringBuilder hashData = new StringBuilder();
-        Iterator<String> itr = fieldNames.iterator();
-        while (itr.hasNext()) {
-            String fieldName = itr.next();
-            String fieldValue = fields.get(fieldName);
-            if (fieldValue != null && fieldValue.length() > 0) {
-                hashData.append(fieldName).append('=').append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII));
-                if (itr.hasNext()) hashData.append('&');
-            }
-        }
-        String computedHash = VNPayConfig.hmacSHA512(vnp_HashSecret, hashData.toString());
-        boolean valid = receivedHash != null && computedHash.equalsIgnoreCase(receivedHash);
-
         Map<String, Object> result = new HashMap<>();
-        result.put("valid", valid);
-        result.put("responseCode", fields.get("vnp_ResponseCode"));
+        result.put("valid", vnPayService.isValidSignature(allParams));
+        result.put("responseCode", allParams.get("vnp_ResponseCode"));
         return result;
     }
 }

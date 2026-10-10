@@ -57,6 +57,10 @@ public class SeatRealtimeManager {
     }
 
     public synchronized boolean holdSeat(Integer scheduleId, Integer seatId, Integer userId, String sessionId) {
+        return holdSeat(scheduleId, seatId, userId, sessionId, 5);
+    }
+
+    public synchronized boolean holdSeat(Integer scheduleId, Integer seatId, Integer userId, String sessionId, int minutes) {
         if (scheduleId == null || seatId == null || userId == null) return false;
 
         scheduleLocks.putIfAbsent(scheduleId, new ConcurrentHashMap<>());
@@ -68,8 +72,8 @@ public class SeatRealtimeManager {
             return false;
         }
 
-        // Khóa ghế cho user này trong 5 phút
-        locks.put(seatId, new LockInfo(userId, sessionId, 5));
+        // Khóa ghế cho user này (mặc định 5 phút khi chọn ghế, dài hơn khi đang thanh toán)
+        locks.put(seatId, new LockInfo(userId, sessionId, minutes));
         userScheduleMap.put(userId, scheduleId);
         if (sessionId != null) {
             sessionUserMap.put(sessionId, new AbstractMap.SimpleEntry<>(scheduleId, userId));

@@ -36,6 +36,11 @@ public class GetAllScheduleRequest {
 
     private String startTime;
     private Integer roomId;
+
+    // Do controller tự quyết theo quyền người gọi (không phải admin -> chỉ lấy suất chưa chiếu)
+    @JsonIgnore
+    private boolean onlyUpcoming;
+
     public Specification<Schedule> getSpecification(){
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -56,6 +61,16 @@ public class GetAllScheduleRequest {
             }
             if(startTime!= null){
                 predicates.add(cb.equal(root.get(Schedule.Fields.startTime), LocalTime.parse(startTime)));
+            }
+            if (onlyUpcoming) {
+                LocalDate today = LocalDate.now();
+                predicates.add(cb.or(
+                    cb.greaterThan(root.<LocalDate>get(Schedule.Fields.startDate), today),
+                    cb.and(
+                        cb.equal(root.get(Schedule.Fields.startDate), today),
+                        cb.greaterThan(root.<LocalTime>get(Schedule.Fields.startTime), LocalTime.now())
+                    )
+                ));
             }
             return cb.and(predicates.toArray(new Predicate[predicates.size()]));
         };

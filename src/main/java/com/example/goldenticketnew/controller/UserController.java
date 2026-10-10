@@ -40,6 +40,10 @@ public class UserController {
     )
     @GetMapping("/me")
     public ResponseEntity<ResponseBase<UserSummary>> getCurrentUser(@CurrentUser UserPrincipal currentUser) {
+        // GET /api/user/** là public nên token hết hạn/sai vẫn vào được đây với currentUser = null
+        if (currentUser == null) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
+        }
         return ResponseEntity.ok(new ResponseBase<> (userService.getCurrentUser(currentUser)));
     }
 

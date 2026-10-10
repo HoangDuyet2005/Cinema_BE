@@ -60,6 +60,8 @@ public class BillController {
             // người khác (IDOR) - đã vá: khách thường chỉ được đặt vé cho chính mình.
             throw new AccessDeniedException("Không có quyền đặt vé cho user khác");
         }
+        // Khách tự đặt phải kèm bằng chứng thanh toán VNPay; nhân viên bán tại quầy (thu tiền mặt) thì không
+        bookingRequestDTO.setPaymentRequired(!isStaffOrAdmin(currentUser));
         return new ResponseEntity<>(new ResponseBase<>(billService.bookingHandler(bookingRequestDTO), 899, "Dat ve thanh cong"), HttpStatus.OK);
     }
 
@@ -80,11 +82,11 @@ public class BillController {
 
     @Operation(
         summary = "Thanh toan hóa đơn ",
-        description = "- Thanh toan hóa đơn (ADMIN/STAFF hoặc chính chủ hóa đơn)"
+        description = "- Xác nhận đã thu tiền tại quầy (chỉ ADMIN/STAFF). Khách thanh toán online qua VNPay."
     )
     @PostMapping("/payment")
-    public ResponseEntity<BillDto> payBill(@CurrentUser UserPrincipal currentUser, @Valid @Parameter Integer id) {
-        requireOwnerOrStaff(currentUser, id);
+    @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
+    public ResponseEntity<BillDto> payBill(@Valid @Parameter Integer id) {
         return new ResponseEntity<>(billService.payBill(id), HttpStatus.OK);
     }
 
@@ -110,21 +112,21 @@ public class BillController {
 
     @Operation(
         summary = "Lấy DashBoard User ",
-        description = "- Lấy DashBoard User (ADMIN/STAFF)"
+        description = "- Lấy DashBoard User (ADMIN/STAFF xem tất cả, khách chỉ xem của chính mình)"
     )
     @GetMapping("/getUserDashBoard")
-    @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
-    public ResponseEntity<List<UserReportDto>> getUserDashBoard(@Valid @ParameterObject GetDashboardTransactionRequest request) {
+    public ResponseEntity<List<UserReportDto>> getUserDashBoard(@CurrentUser UserPrincipal currentUser, @Valid @ParameterObject GetDashboardTransactionRequest request) {
+        restrictToOwnBillsUnlessStaff(currentUser, request);
         return new ResponseEntity<>(billService.getUserDashBoard(request), HttpStatus.OK);
     }
 
     @Operation(
         summary = "Lấy Danh sach Bill ",
-        description = "- Lấy Danh sach Bill (ADMIN/STAFF)"
+        description = "- Lấy Danh sach Bill (ADMIN/STAFF xem tất cả, khách chỉ xem của chính mình)"
     )
     @GetMapping("/getAllBill")
-    @PreAuthorize("hasAnyRole('ADMIN','STAFF')")
-    public ResponseEntity<List<BillDto>> getList(@Valid @ParameterObject GetDashboardTransactionRequest request) {
+    public ResponseEntity<List<BillDto>> getList(@CurrentUser UserPrincipal currentUser, @Valid @ParameterObject GetDashboardTransactionRequest request) {
+        restrictToOwnBillsUnlessStaff(currentUser, request);
         return new ResponseEntity<>(billService.getList(request), HttpStatus.OK);
     }
 
@@ -146,6 +148,14 @@ public class BillController {
     private boolean isStaffOrAdmin(UserPrincipal currentUser) {
         return currentUser.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_STAFF"));
+    }
+
+    // Trang hồ sơ của khách gọi 2 API danh sách hóa đơn với userId của chính họ - không chặn hẳn
+    // khách, mà ép userId về đúng người đang đăng nhập để không xem được hóa đơn người khác.
+    private void restrictToOwnBillsUnlessStaff(UserPrincipal currentUser, GetDashboardTransactionRequest request) {
+        if (!isStaffOrAdmin(currentUser)) {
+            request.setUserId(currentUser.getId());
+        }
     }
 
     private void requireOwnerOrStaff(UserPrincipal currentUser, Integer billId) {

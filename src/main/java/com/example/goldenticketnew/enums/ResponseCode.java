@@ -24,6 +24,8 @@ public enum ResponseCode {
     //Schedule
     SCHEDULE_NOT_FOUND(301, " Schedule not found"),
 
+    SCHEDULE_ALREADY_STARTED(302, "Suất chiếu đã bắt đầu, không thể đặt vé"),
+
     //Schedule
     ARTICLE_NOT_FOUND(401, " Article not found"),
 
@@ -42,6 +44,10 @@ public enum ResponseCode {
     //vietnam message
 
     BOOKING_SEAT_EXIST(901,"Đã có người nhanh tay hơn đặt ghế, mời bạn chọn lại!"),
+    BOOKING_SEAT_LIMIT(902, "Mỗi lần đặt tối đa 10 ghế"),
+    PAYMENT_INVALID(903, "Không xác minh được giao dịch thanh toán cho đơn đặt vé này"),
+    PAYMENT_ALREADY_USED(904, "Giao dịch thanh toán này đã được dùng để xuất vé trước đó"),
+    CHECKIN_NOT_ALLOWED(905, "Vé không hợp lệ để nhận/in: chưa thanh toán, đã in rồi hoặc không đúng ngày suất chiếu"),
 
 
     ;

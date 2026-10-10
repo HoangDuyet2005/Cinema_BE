@@ -10,6 +10,7 @@ import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Getter
@@ -40,4 +41,9 @@ public class Schedule extends UserDateAudit {
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "room_id", nullable = false)
     private Room room;
+
+    /** Suất chiếu đã bắt đầu tại thời điểm {@code moment} hay chưa (đã bắt đầu thì không bán vé nữa). */
+    public boolean hasStartedAt(LocalDateTime moment) {
+        return startDate != null && startTime != null && !LocalDateTime.of(startDate, startTime).isAfter(moment);
+    }
 }

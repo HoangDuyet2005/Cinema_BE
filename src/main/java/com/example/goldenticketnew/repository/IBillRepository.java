@@ -17,6 +17,8 @@ import java.util.Optional;
 
 public interface IBillRepository extends JpaRepository<Bill, Integer> , JpaSpecificationExecutor<Bill> {
     Optional<Bill> findByBookingCode(String bookingCode);
+
+    boolean existsByPaymentRef(String paymentRef);
     @Query(value = "SELECT a.dateTran,a.transactionCount , b.ticketAmount, a.incomeAmount FROM\n" +
         "               (\n" +
         "                SELECT DATE_FORMAT(bill.created_time,'%Y-%m-%d') dateTran,count(bill.id) transactionCount , sum(bill.price) incomeAmount\n" +

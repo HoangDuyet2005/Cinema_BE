@@ -8,6 +8,8 @@ import com.example.goldenticketnew.payload.response.ResponseBase;
 import com.example.goldenticketnew.payload.resquest.GetAllScheduleChatBoxRequest;
 import com.example.goldenticketnew.payload.resquest.GetAllScheduleRequest;
 import com.example.goldenticketnew.payload.schedule.AddNewScheduleRequest;
+import com.example.goldenticketnew.security.CurrentUser;
+import com.example.goldenticketnew.security.UserPrincipal;
 import com.example.goldenticketnew.service.schedule.IScheduleService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -54,7 +56,8 @@ public class ScheduleController {
         description = "- Get All Schedule với filter"
     )
     @GetMapping
-    public ResponseEntity<ResponseBase<List<ScheduleDto>>> getSchedules(@ParameterObject GetAllScheduleRequest request){
+    public ResponseEntity<ResponseBase<List<ScheduleDto>>> getSchedules(@CurrentUser UserPrincipal currentUser, @ParameterObject GetAllScheduleRequest request){
+        request.setOnlyUpcoming(!isAdmin(currentUser));
         return new ResponseEntity<>(new ResponseBase<>(scheduleService.getSchedules(request)), HttpStatus.OK);
     }
 
@@ -71,13 +74,20 @@ public class ScheduleController {
         description = "- Get All Schedule với filter và paging"
     )
     @GetMapping("/getAll")
-    public ResponseEntity<ResponseBase<PageResponse<ScheduleDto>>> getSchedules(@ParameterObject Pageable pageable, @ParameterObject GetAllScheduleRequest request ){
+    public ResponseEntity<ResponseBase<PageResponse<ScheduleDto>>> getSchedules(@CurrentUser UserPrincipal currentUser, @ParameterObject Pageable pageable, @ParameterObject GetAllScheduleRequest request ){
         request.setPageable(pageable);
+        request.setOnlyUpcoming(!isAdmin(currentUser));
         return new ResponseEntity<>(new ResponseBase<>(scheduleService.getAllSchedule(request)), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ResponseBase<ScheduleDto>> getScheduleById(@PathVariable Integer id) {
         return ResponseEntity.ok(new ResponseBase<>(scheduleService.getScheduleById(id)));
+    }
+
+    // Admin cần xem cả suất đã chiếu để quản lý; khách (kể cả chưa đăng nhập) chỉ thấy suất chưa chiếu
+    private boolean isAdmin(UserPrincipal currentUser) {
+        return currentUser != null && currentUser.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
     }
 }
