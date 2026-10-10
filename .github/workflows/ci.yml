@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      # Profile "test" dùng cấu hình giả trong src/test/resources (không cần bí mật thật).
+      # GoldenTicketNewApplicationTests cần MySQL thật nên bỏ qua trên CI.
+      - name: Build and run tests
+        run: mvn -B test -Dspring.profiles.active=test "-Dtest=!GoldenTicketNewApplicationTests"

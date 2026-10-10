@@ -84,7 +84,7 @@ public class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isCreated()) // Mong doi ma HTTP 201
                 .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("User registered successfully"));
+                .andExpect(jsonPath("$.message").value("Đăng ký tài khoản thành công!"));
     }
 
     @Test
@@ -98,7 +98,7 @@ public class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("Username is already taken!"));
+                .andExpect(jsonPath("$.message").value("Tên tài khoản này đã tồn tại! Vui lòng chọn tên tài khoản khác."));
     }
 
     @Test
@@ -113,7 +113,7 @@ public class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(validRequest)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.success").value(false))
-                .andExpect(jsonPath("$.message").value("Email Address already in use!"));
+                .andExpect(jsonPath("$.message").value("Địa chỉ Email này đã được đăng ký! Vui lòng sử dụng email khác hoặc đăng nhập."));
     }
 
     @ParameterizedTest
@@ -130,7 +130,8 @@ public class AuthControllerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"12345", "this-password-is-way-too-long-over-20-chars"})
+    // Quy tắc hiện tại: mật khẩu 6-50 ký tự
+    @ValueSource(strings = {"12345", "this-password-is-way-too-long-and-exceeds-fifty-characters-x"})
     void registerUser_whenPasswordInvalidLength_shouldReturn400BadRequest(String invalidPassword) throws Exception {
         // Given
         validRequest.setPassword(invalidPassword);
@@ -144,7 +145,8 @@ public class AuthControllerTest {
 
     @ParameterizedTest
     @NullAndEmptySource
-    @ValueSource(strings = {"a", "ab", "abc", "this-name-is-extremely-long-and-exceeds-forty-characters-limit"})
+    // Quy tắc hiện tại: họ tên 2-50 ký tự (tên tiếng Việt 2-3 ký tự như "An" là hợp lệ)
+    @ValueSource(strings = {"a", "this-name-is-extremely-long-and-exceeds-the-fifty-characters-limit"})
     void registerUser_whenNameInvalid_shouldReturn400BadRequest(String invalidName) throws Exception {
         // Given
         validRequest.setName(invalidName);
