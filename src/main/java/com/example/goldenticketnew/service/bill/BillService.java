@@ -15,6 +15,7 @@ import com.example.goldenticketnew.workflow.interfaces.IBookingTicketWorkflow;
 import com.uber.cadence.client.WorkflowClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,8 +39,13 @@ public class BillService implements IBillService {
     private final IFoodItemRepository foodItemRepository;
     private final IBillFoodRepository billFoodRepository;
     private final PriceCalculationService priceCalculationService;
-    private final WorkflowClient workflowClient;
-    private final CadenceWorkflowConfig cadenceWorkflowConfig;
+
+    // Cadence là tuỳ chọn: các bean này chỉ tồn tại khi cadence.enabled=true. Inject bắt buộc qua
+    // constructor khiến app không khởi động được khi tắt Cadence, dù đặt vé không cần workflow.
+    @Autowired(required = false)
+    private WorkflowClient workflowClient;
+    @Autowired(required = false)
+    private CadenceWorkflowConfig cadenceWorkflowConfig;
 
     public static final String workFlowId = "BOOKING_TASK_ID";
 
@@ -152,6 +158,9 @@ public class BillService implements IBillService {
     public BillDto bookingHandler(BookingRequestDto bookingRequestDTO) {
         try {
             BillDto bill = createNewBill(bookingRequestDTO);
+            if (workflowClient == null || cadenceWorkflowConfig == null) {
+                return bill;
+            }
             try {
                 log.info("Start workflow Booking");
                 IBookingTicketWorkflow workflow = workflowClient.newWorkflowStub(IBookingTicketWorkflow.class,
